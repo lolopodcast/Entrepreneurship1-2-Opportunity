@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>創業機會：Wharton 互動學習</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: { extend: { fontFamily: { sans: ['Inter','sans-serif'], serif: ['Merriweather','serif'] } } }
+}
+</script>
+<style>
+@keyframes fadeInUp { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:translateY(0)} }
+.animate-fade-in { animation: fadeInUp 0.5s ease-out forwards; }
+.perspective { perspective: 1000px; }
+.transform-style-3d { transform-style: preserve-3d; }
+.backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.rotate-y-180 { transform: rotateY(180deg); }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ═══════════════════════════════════════════════════════════════
+   DICT — 完整雙語字典（zh / en 完全對稱）
+   ═══════════════════════════════════════════════════════════════ */
+const dict = {
+zh: {
+title: "創業機會：辨識、評估與行動",
+subtitle: "Wharton Online · 互動學習系列",
+nav_modules: "單元目錄", nav_prev: "上一單元", nav_next: "下一單元",
+key_terms: "關鍵專有名詞", flip_prompt: "點擊翻轉", audio_read: "語音導覽",
+quiz_title: "模組知識檢定（隨機 4 題）",
+submit: "提交答案", retry: "重新測驗",
+score: "得分", correct: "正確", incorrect: "錯誤", explanation: "解析",
+analytics_title: "學習歷程分析", analytics_desc: "追蹤您的學習進度、互動頻率與測驗表現",
+analytics_form_title: "填寫學習者資訊",
+analytics_group: "組別", analytics_dept: "系級",
+analytics_dept_ph: "例：企管三", analytics_id: "學號", analytics_id_ph: "例：B11234567",
+analytics_name: "姓名", analytics_name_ph: "請輸入姓名",
+analytics_export_csv: "匯出 CSV 歷程記錄",
+analytics_fill_required: "請填寫完整資訊以解鎖匯出",
+group_options: ["G1","G2","G3","G4","G5","Others"],
+analytics_total_time: "總學習時間", analytics_total_clicks: "總互動點擊",
+analytics_overall_acc: "總體測驗答對率",
+analytics_module: "模組", analytics_time: "停留時間",
+analytics_clicks: "點擊次數", analytics_acc: "答對率",
+analytics_correct_ans_total: "答對 / 已答 / 總題數",
+analytics_no_data: "尚未測驗", analytics_sec: "秒", analytics_times: "次",
+
+// M0 課程總覽
+m0_nav: "課程總覽",
+m0_title: "創業機會：辨識、評估與行動",
+m0_intro: "本單元探討創業者如何在高度不確定的環境中辨識、評估並掌握機會。透過 Wharton 三位教授的研究與實務洞見，你將學到從構想發想到機會篩選的完整方法論。",
+m0_why: "為什麼「機會辨識」至關重要？",
+m0_why_desc: "創業成功的第一步不是募資、不是組團隊，而是找到值得追求的機會。研究顯示，多數創業者只考慮一個構想就投入——但系統化地比較多個機會，能顯著提升成功機率。",
+m0_stats: [
+  { val: "42 歲", label: "成功創業者平均年齡" },
+  { val: "6%", label: "原始構想可解釋的銷售變異" },
+  { val: "1/1000", label: "創投基金最終大勝的比率" },
+  { val: "5-10 個", label: "建議比較的機會數量" }
+],
+m0_modules: [
+  { num: "01", title: "創業與不確定性", desc: "理解三類不確定性，學會透過規劃與學習降低風險。" },
+  { num: "02", title: "創新的來源", desc: "掌握推力與拉力創新模式，打破創業者刻板印象。" },
+  { num: "03", title: "顧客作為機會來源", desc: "運用群眾外包與間接回饋，讓顧客幫你構想與篩選。" },
+  { num: "04", title: "構想的價值：VIDE 模型", desc: "量化構想品質，理解執行力與外生因素的交互作用。" },
+  { num: "05", title: "機會評估", desc: "建立系統化篩選準則，用結構化方法比較多個機會。" },
+  { num: "06", title: "錦標賽策略", desc: "學習分散佈局與延遲承諾的智慧，在不確定中致勝。" }
+],
+m0_start: "開始學習 →",
+
+// M1 創業與不確定性
+m1_nav: "1. 創業與不確定性",
+m1_title: "創業與不確定性：從認知到管理",
+m1_p1: "Ethan Mollick 教授指出，創業的核心驅動力正是不確定性——你正在利用一個他人尚未看見或尚未行動的機會。如果機會顯而易見且毫無風險，早就有人搶先做了。因此，擁抱不確定性是創業者的必備心態。",
+m1_p2: "「你不可能消除所有不確定性，但你可以透過規劃，將未知風險轉化為可管理的不確定性，再將不確定性轉化為已知事實。」— Ethan Mollick",
+m1_p3: "研究發現，大幅改變方向（轉向，Pivot）的新創企業，其存活率不遜於甚至優於堅守初始構想的企業。這意味著創業成功的關鍵不是一開始就「猜對」，而是建立持續學習與快速調適的能力。目前精實創業、商業模式畫布、發現導向規劃等方法論各有擁護者，但學術上尚無單一方法被證實優於其他。",
+m1_cards: [
+  { title: "已知事實（Known Knowns）", desc: "我們已確認的資訊，例如產品已獲專利、合約已簽署。這是風險最低的資訊類別。" },
+  { title: "不確定性（Known Unknowns）", desc: "我們知道存在但結果未知的變數，例如「能否獲得融資？」、「顧客會怎麼反應？」可透過測試與研究來降低。" },
+  { title: "未知風險（Unknown Unknowns）", desc: "完全意料之外的事件，例如市場突變、關鍵人員離職、新技術顛覆。只能透過分散佈局來因應。" }
+],
+m1_case: { title: "微個案：Slack 的傳奇轉向", desc: "Slack 原本是一家名為 Tiny Speck 的遊戲公司，開發線上遊戲 Glitch。遊戲失敗後，團隊發現內部溝通工具反而深受喜愛，於是轉向打造企業通訊平台。2019 年直接上市，2021 年以 277 億美元被 Salesforce 收購。這個案例完美詮釋了 Mollick 教授的觀點：轉向不是失敗的象徵，而是學習能力的展現。" },
+m1_terms: [
+  { front: "轉向 Pivot", back: "新創企業根據市場回饋大幅改變策略方向的行為。研究顯示轉向過的企業存活率不低於未轉向者。" },
+  { front: "精實創業 Lean Startup", back: "Eric Ries 提出的方法論，強調「建造—衡量—學習」循環，以最小可行產品快速驗證假設。" },
+  { front: "發現導向規劃 Discovery-Driven Planning", back: "McGrath & MacMillan 提出的規劃方法，明確列出所有假設並設計檢驗點，適用於高度不確定的環境。" }
+],
+m1_q: [
+  { q: "創業的不確定性來自於什麼？", opts: ["政府法規太複雜","機會尚未被驗證，無法事先知道答案","創業者缺乏經驗","資金不足"], ans: 1, exp: "創業的本質是利用尚未被滿足的機會，因此無法事先確知結果。" },
+  { q: "以下哪項屬於「未知風險」？", opts: ["不確定顧客是否接受產品","市場突然因疫情崩盤","不確定能否取得銀行貸款","競爭者可能降價"], ans: 1, exp: "未知風險是完全無法預見的事件，如突發疫情或技術顛覆。" },
+  { q: "研究顯示，大幅轉向的新創企業存活率如何？", opts: ["遠低於未轉向的企業","與未轉向的企業相同或更高","無相關數據","取決於產業"], ans: 1, exp: "Mollick 的研究顯示，轉向過的企業存活率不遜於甚至優於堅守初始方向的企業。" },
+  { q: "規劃在創業中的核心作用是？", opts: ["確保 100% 成功","將未知風險轉化為可管理的不確定性","取代創業者的直覺","消除所有風險"], ans: 1, exp: "規劃的目的是降級不確定性：將未知風險轉為已知不確定性，再轉為已知事實。" },
+  { q: "精實創業（Lean Startup）的核心循環是？", opts: ["計劃—執行—檢查—行動","建造—衡量—學習","設計—生產—銷售","研究—開發—測試"], ans: 1, exp: "精實創業強調 Build-Measure-Learn 快速循環，以最小可行產品驗證假設。" },
+  { q: "目前學術界對創業規劃方法的結論是？", opts: ["精實創業已被證實最優","商業模式畫布效果最好","尚無單一方法被證實優於其他","發現導向規劃最適合所有情境"], ans: 2, exp: "教授明確指出，目前沒有學術證據證明任何一種方法優於其他方法。" },
+  { q: "Slack 的案例說明了什麼？", opts: ["遊戲產業注定失敗","轉向是學習能力的展現，非失敗象徵","只有軟體公司能成功轉向","內部工具沒有商業價值"], ans: 1, exp: "Slack 從失敗的遊戲公司轉向為企業通訊平台，是轉向成功的經典案例。" },
+  { q: "「發現導向規劃」的核心特色是？", opts: ["不需要任何假設","明確列出假設並設計檢驗點","只適用於大企業","完全依靠數據分析"], ans: 1, exp: "Discovery-Driven Planning 要求創業者把所有假設列出來，並在關鍵節點進行驗證。" }
+],
+
+// M2 創新的來源
+m2_nav: "2. 創新的來源",
+m2_title: "創新的來源：推力與拉力",
+m2_p1: "Karl T. Ulrich 教授將創新定義為「解決方案與需求之間的全新配對」。創新可以從兩個方向發生：拉力創新（Pull）從顧客需求出發，尋找最佳解決方案；推力創新（Push）則從技術能力出發，尋找適合的應用場景。",
+m2_p2: "「價值創造的三個根本問題：需求是否真實？方案是否滿足需求？顧客願意支付的價格是否遠高於成本？」— Karl T. Ulrich",
+m2_p3: "Ulrich 教授同時打破了關於創業者的三大迷思：研究顯示成功創業者的平均年齡是 42 歲（非 20 出頭）；美國約 38% 企業由女性創立、36% 由少數族裔創立；而過度自信雖能促使人投入創業，卻無法預測成功。",
+m2_cards: [
+  { title: "拉力創新（Pull Innovation）", desc: "從顧客痛點出發：先辨識需求，再尋找或開發最佳方案。這是多數產品設計教科書採用的模式，也是本課程的主要焦點。例如：Nest 智慧溫控器針對傳統溫控器的痛點而設計。" },
+  { title: "推力創新（Push Innovation）", desc: "從技術能力出發：擁有技術或能力，再尋找可以應用的市場。風險較高，因為可能找不到真正的顧客需求。例如：Segway 擁有出色的自平衡技術，但未能找到大眾市場。" }
+],
+m2_case: { title: "微個案：Segway 的推力創新教訓", desc: "Segway 於 2001 年上市時被譽為「自汽車發明以來最偉大的交通革命」。發明家 Dean Kamen 獲得 John Doerr 3,800 萬美元投資，Steve Jobs 更預測其影響力堪比個人電腦。然而公司原預計首年銷售 50,000 台，實際前七年僅售出不到 30,000 台，2020 年正式停產。失敗原因：售價過高（5,000 美元）、在人行道嫌太大在馬路嫌太慢、缺乏配套基礎設施、未經充分顧客驗證。這是推力創新忽略「需求是否真實」的經典教訓。" },
+m2_terms: [
+  { front: "推力創新 Push Innovation", back: "從技術或能力出發尋找市場應用的創新模式。風險較高，需驗證需求真實性。" },
+  { front: "拉力創新 Pull Innovation", back: "從顧客需求出發尋找最佳解決方案的創新模式。通常風險較低，因為需求已被確認。" },
+  { front: "價值創造公式 Value Creation", back: "Price – Cost >> 0：顧客願意支付的價格必須遠大於提供方案的成本，才能創造可持續的價值。" }
+],
+m2_q: [
+  { q: "Ulrich 教授如何定義「創新」？", opts: ["發明全新的技術","解決方案與需求之間的全新配對","獲得專利的產品","首次公開募股的公司"], ans: 1, exp: "創新不等於發明，而是方案與需求的新連結。" },
+  { q: "Segway 失敗的根本原因是？", opts: ["技術不夠先進","推力創新未充分驗證顧客需求","競爭對手太多","政府禁止使用"], ans: 1, exp: "Segway 技術出色但未驗證真正的大眾需求，是推力創新的經典教訓。" },
+  { q: "成功創業者的平均年齡是？", opts: ["22 歲","32 歲","42 歲","52 歲"], ans: 2, exp: "研究顯示成功創業者平均年齡為 42 歲，峰值在 45-52 歲之間。" },
+  { q: "價值創造的三個根本問題不包括？", opts: ["需求是否真實","方案是否滿足需求","顧客願意支付的價格是否高於成本","創業團隊是否有 MBA 學位"], ans: 3, exp: "三個問題是：需求真實性、方案有效性、價格 vs. 成本。學歷並非其中之一。" },
+  { q: "過度自信對創業的影響是？", opts: ["同時增加創業行為和成功率","增加創業行為但不預測成功","降低創業行為但提升成功率","完全沒有影響"], ans: 1, exp: "過度自信會驅使人投入創業，但研究顯示它無法預測是否成功。" },
+  { q: "Nest 智慧溫控器屬於哪種創新模式？", opts: ["推力創新","拉力創新","破壞性創新","漸進式創新"], ans: 1, exp: "Nest 從傳統溫控器的使用者痛點出發設計產品，屬於典型的拉力創新。" },
+  { q: "美國約有多少比例的企業由女性創立？", opts: ["約 18%","約 28%","約 38%","約 48%"], ans: 2, exp: "根據研究數據，美國約 38% 企業由女性創立。" },
+  { q: "「Push Innovation」最大的風險是？", opts: ["技術太昂貴","可能找不到真正的市場需求","無法取得專利","團隊能力不足"], ans: 1, exp: "推力創新的核心風險在於：擁有技術卻可能沒有對應的市場需求。" }
+],
+
+// M3 顧客作為機會來源
+m3_nav: "3. 顧客作為機會來源",
+m3_title: "顧客作為機會來源：群眾外包與間接回饋",
+m3_p1: "Kartik Hosanagar 教授提出，顧客可以同時扮演「構想生成者」與「構想篩選者」兩個角色。企業可以透過群眾外包平台讓顧客直接提交構想，也可以從產品評論與社群媒體中挖掘間接回饋，發現未被滿足的需求。",
+m3_p2: "「群眾外包不僅能產生大量多元的構想，其投票機制還能作為需求的代理指標——但要注意，投票是免費的，購買不是。」— Kartik Hosanagar",
+m3_p3: "Threadless 是群眾外包的經典案例：每週約 1,000 件設計投稿，由 30 萬名全球貢獻者提交了超過 50 萬件設計，但 Threadless 沒有任何一位正式設計師。另一個路徑是間接回饋：C&A Marketing 透過挖掘 Amazon 產品評論來開發新品，其 Jumbl 與 Ivation 兩個品牌的產品組合已達 50,000 件。",
+m3_cards: [
+  { title: "直接群眾外包模式", desc: "Threadless：全球設計師提交 T 恤設計→社群投票→管理層從前 5% 中挑選→印製銷售。Dell IdeaStorm 收到超過 24,000 個產品建議；MyStarbucks Idea 收到超過 200,000 個點子。" },
+  { title: "間接回饋挖掘模式", desc: "C&A Marketing 從 Amazon 評論中發現顧客痛點，例如多位消費者抱怨藍牙喇叭不防水，於是開發防水款。無需直接顧客關係，也能從數位足跡中找到產品機會。" },
+  { title: "投票作為需求代理", desc: "群眾投票可反映偏好，但存在偏差：投票無成本而購買有成本、投票群體可能非典型消費者。因此 Threadless 結合群眾投票與管理層判斷做最終決策。" }
+],
+m3_case: { title: "微個案：LEGO Ideas 的共創平台", desc: "LEGO 在 2008 年推出群眾外包平台 LEGO Ideas，至今已累積超過 280 萬用戶、13.5 萬件提案。運作方式：粉絲提交設計→獲得 10,000 票即進入官方審核→獲選者獲得產品營收的 1%。成功案例包括中世紀鐵匠小屋、NASA 女科學家系列等。LEGO Ideas 不僅為公司帶來源源不絕的新品構想，還創造了強大的粉絲社群與品牌忠誠度，完美呼應了 Hosanagar 教授「讓顧客同時構想與篩選」的理念。" },
+m3_terms: [
+  { front: "群眾外包 Crowdsourcing", back: "將過去由企業內部完成的任務（如設計、構想）外包給大量非特定群眾，以獲得更大的量與多元性。" },
+  { front: "間接回饋 Indirect Feedback", back: "從產品評論、社群媒體等數位足跡中挖掘顧客需求，適用於無直接顧客關係的企業。" },
+  { front: "構想篩選 Idea Selection", back: "從大量構想中選出最有潛力者的過程。群眾投票可作為需求代理指標，但需結合管理層判斷。" }
+],
+m3_q: [
+  { q: "Threadless 的商業模式核心是？", opts: ["聘請頂尖設計師","群眾外包設計＋社群投票篩選","大量投放廣告","與品牌聯名合作"], ans: 1, exp: "Threadless 讓全球設計師提交設計並由社群投票篩選，沒有任何正式設計師。" },
+  { q: "群眾投票作為需求代理指標的侷限是？", opts: ["投票人數太少","投票無成本，可能無法反映真實購買意願","投票結果太準確","技術上難以實現"], ans: 1, exp: "投票是免費的，但購買需要付費，因此投票偏好可能與購買行為存在落差。" },
+  { q: "C&A Marketing 的產品開發策略是？", opts: ["自行研發所有產品","從 Amazon 評論中挖掘顧客痛點","聘請外部顧問公司","複製競爭對手的產品"], ans: 1, exp: "C&A Marketing 透過分析 Amazon 產品評論，發現未被滿足的需求來開發新品。" },
+  { q: "LEGO Ideas 平台的進入門檻是？", opts: ["支付報名費","獲得 10,000 票支持","通過設計專業考試","由 LEGO 員工推薦"], ans: 1, exp: "提案需獲得 10,000 票支持才能進入 LEGO 官方審核階段。" },
+  { q: "Hosanagar 教授認為群眾外包最適合產生什麼類型的創新？", opts: ["完全顛覆性的突破創新","實用但有時較為漸進的產品改良","純粹的學術研究","僅限於軟體產業"], ans: 1, exp: "教授指出群眾外包較適合實用的漸進式改良，真正的突破性創新較難從群眾中誕生。" },
+  { q: "參與群眾外包的三大誘因不包括？", opts: ["金錢獎勵","解決自身問題","技能發展","獲得公司股權"], ans: 3, exp: "三大誘因是金錢報酬、解決自身需求、技能發展。公司股權不在此列。" },
+  { q: "Threadless 的設計貢獻者有何特色？", opts: ["全部是美國設計師","70% 來自美國以外，年齡從 14 到 65 歲","僅限專業設計師","必須有設計學位"], ans: 1, exp: "Threadless 的貢獻者極為多元：70% 來自美國以外，年齡從 14 歲到 65 歲退休人士。" },
+  { q: "群眾外包對新創企業的最大價值是？", opts: ["降低辦公室租金","加速構想生成與顧客驗證","取代所有員工","獲得政府補助"], ans: 1, exp: "群眾外包能同時加速構想生成和顧客驗證，是早期創業的有力工具。" }
+],
+
+// M4 VIDE 模型
+m4_nav: "4. VIDE 模型",
+m4_title: "構想的價值：VIDE 模型",
+m4_p1: "Karl T. Ulrich 教授根據自身經歷（Xootr 滑板車大獲成功 vs. Voloci 電動機車黯然失敗）提出 VIDE 模型：Value = f(Idea, Development, Exogenous factors)。價值取決於原始構想品質、團隊的開發執行力、以及外生環境因素三者的交互作用。",
+m4_p2: "「別把巨大的成功完全歸因於你的天才，也別把失敗完全歸咎於你的無能——外生因素的影響力遠比你想像的大。」— Karl T. Ulrich",
+m4_p3: "Ulrich 與 Kornish 研究了 Quirky.com 上超過 100 件產品，發現原始構想的消費者購買意向僅解釋約 6% 的銷售率變異量——但一個標準差較好的構想，對應約 75% 的銷售提升。另一個關鍵發現：四位隨機消費者對構想品質的預測力，優於七位專家。",
+m4_cards: [
+  { title: "I — 構想（Idea）", desc: "好比金礦的礦脈位置。「地底有沒有金礦？」= 市場上有沒有真實的顧客痛點？原始構想品質約解釋 6% 的結果變異，但一個標準差的提升意味著 75% 的銷售增長。" },
+  { title: "D — 開發（Development）", desc: "好比開採效率。擁有合適的團隊、技能、努力程度，以及正確的策略，是將構想轉化為成功產品的關鍵。這解釋了大部分的結果變異。" },
+  { title: "E — 外生因素（Exogenous）", desc: "好比金價波動。市場景氣、法規變化、技術浪潮等外部因素，完全超出創業者控制，但對成敗有重大影響。" }
+],
+m4_case: { title: "微個案：CabStalker → Uber 的啟示", desc: "早在 2009 年，Wharton 學生就在課堂專案中提出了「CabStalker」——用智慧手機叫車的概念，功能幾乎與後來的 Uber 相同。然而這些學生並未能創造出 Uber。更值得注意的是，Uber 推出後，同一個構想迅速被 Lyft、SideCar 等公司複製。這說明構想本身可以被公開取得，真正的差異化來自 D（開發執行力）。Uber 的成功不在於構想獨特，而在於團隊的執行、時機與規模化能力。" },
+m4_terms: [
+  { front: "VIDE 模型", back: "V = f(I, D, E)：企業價值取決於構想品質（Idea）、開發執行力（Development）、外生因素（Exogenous），三者缺一不可。" },
+  { front: "五級購買意向量表 Five-Box Purchase Intent", back: "市場研究標準工具，讓消費者從「一定不買」到「一定會買」五個等級評估構想品質，是預測銷售的有效方法。" },
+  { front: "R² 解釋力 Explained Variance", back: "統計指標，衡量自變數（如構想品質）能解釋因變數（如銷售率）多少比例的變異。Quirky 研究中 R² ≈ 6%。" }
+],
+m4_q: [
+  { q: "VIDE 模型中，V 代表？", opts: ["願景 Vision","價值 Value","創投 Venture","速度 Velocity"], ans: 1, exp: "V 代表 Value（價值），是構想、開發與外生因素三者的函數。" },
+  { q: "Quirky.com 研究發現，原始構想品質解釋了多少銷售變異？", opts: ["約 1%","約 6%","約 25%","約 50%"], ans: 1, exp: "原始構想的消費者購買意向約解釋 6% 的銷售率變異（以對數銷售率計）。" },
+  { q: "一個標準差較好的構想，對應多少銷售提升？", opts: ["約 25%","約 50%","約 75%","約 100%"], ans: 2, exp: "研究顯示一個 sigma 較好的構想，對應約 75% 的銷售率提升。" },
+  { q: "四位隨機消費者 vs. 七位專家，誰對構想品質的預測更準？", opts: ["七位專家","四位隨機消費者","兩者一樣","無法比較"], ans: 1, exp: "研究發現四位隨機消費者的預測力優於七位專家。" },
+  { q: "CabStalker 案例說明了什麼？", opts: ["構想是最重要的成功因素","好的構想就能保證成功","構想可被公開取得，執行力才是差異化關鍵","學生不適合創業"], ans: 2, exp: "Uber 的構想在 2009 年就已被學生提出，說明構想並非獨特，執行力才是關鍵。" },
+  { q: "VIDE 模型中的 E 類似於？", opts: ["創業者的教育程度","團隊的技術能力","天氣——影響你但無法控制","投資者的偏好"], ans: 2, exp: "E 代表外生因素，如同天氣一般影響你但完全超出你的掌控。" },
+  { q: "Sabeer Bhatia 為 Hotmail 寫兩份商業計畫的行為反映了什麼信念？", opts: ["他不信任投資者","他認為構想本身極具價值需要保護","他有兩個不同的事業構想","他想要更多資金"], ans: 1, exp: "Bhatia 用假的商業計畫當誘餌，只在信任的投資者面前才揭露真正的構想，反映他認為構想極具價值。" },
+  { q: "Ulrich 教授對創業者的建議是？", opts: ["只需要好的構想就夠了","構想、執行和運氣都很重要，但既然構想容易衡量，不妨從好構想開始","不要浪費時間在構想品質上","只關注團隊建設"], ans: 1, exp: "構想品質雖只解釋部分變異，但因為容易衡量且完全可控，值得投資時間找到好構想。" }
+],
+
+// M5 機會評估
+m5_nav: "5. 機會評估",
+m5_title: "機會評估：系統化篩選準則",
+m5_p1: "Karl T. Ulrich 教授指出，如果你在這個階段手上有多個候選機會，你已經領先大多數只考慮一個構想的創業者。關鍵問題是：如何從中選擇最值得投入的機會？",
+m5_p2: "「理想的機會是：大量人有深度痛點、你的方案是止痛藥而非維他命、毛利空間大、顧客容易獲取、而且你的團隊是執行這件事的最佳人選。」— Karl T. Ulrich",
+m5_p3: "Ulrich 以其前學生 Alan Cook 的案例說明系統化篩選的實踐：Cook 創辦的 ScoopFree 自動貓砂盆每月每位客戶貢獻 15 美元經常性收入，成功出售公司後，他列出了 9 項明確的篩選準則（大市場、高毛利、經常性收入、利用現有團隊等），從 50-60 個機會中篩選出下一個事業方向。",
+m5_cards: [
+  { title: "需求的顯著性", desc: "多少人有這個需求？痛點有多深？是「小癢」、「偏頭痛」還是「流血不止的傷口」？理想機會兼具廣度（大量潛在顧客）與深度（強烈痛點）。" },
+  { title: "方案的有效性", desc: "你的方案是「維他命」（Nice to have）還是「止痛藥」（Must have）？止痛藥型方案的顧客轉化率和留存率遠高於維他命型。" },
+  { title: "毛利空間", desc: "顧客願意支付的價格與你的成本之間的差距。取決於方案的成本效率、顧客的支付意願和能力、以及市場的競爭強度。" },
+  { title: "顧客獲取難度", desc: "目標顧客是否容易辨識？能否觸及？能否說服他們試用？獲取成本（CAC）是新創企業最常低估的項目之一。" },
+  { title: "團隊—機會契合度", desc: "你的團隊是否擁有執行此機會的最佳能力？是否有熱情？是否能取得所需資源（包括資金）？這是最個人化的篩選維度。" }
+],
+m5_case: { title: "微個案：Alan Cook 的系統化篩選", desc: "Cook 在成功出售 ScoopFree 後，制定了明確的篩選清單：大市場、高毛利、強經常性收入、能利用現有工程團隊、能使用中國供應鏈、能走直銷/訂閱模式、能引起媒體關注、以及有明確的潛在收購方。他的團隊列出了 50-60 個候選機會，然後逐一對照這份清單進行系統化篩選。這種結構化方法遠優於「只考慮腦中第一個想到的點子」。" },
+m5_terms: [
+  { front: "止痛藥 vs. 維他命 Painkiller vs. Vitamin", back: "止痛藥型產品解決急迫痛點（Must have），維他命型產品提供漸進好處（Nice to have）。前者更容易獲得顧客採用。" },
+  { front: "毛利 Gross Margin", back: "售價減去直接成本（Price – Cost），反映核心業務的獲利能力。高毛利為企業提供更大的錯誤容忍空間。" },
+  { front: "顧客獲取成本 CAC", back: "Customer Acquisition Cost，獲取一位新顧客所需的平均成本。新創企業最常低估此項目。" }
+],
+m5_q: [
+  { q: "評估機會時，「需求深度」的最佳比喻是？", opts: ["小癢→偏頭痛→流血傷口","低→中→高","簡單→困難→不可能","便宜→適中→昂貴"], ans: 0, exp: "Ulrich 用癢、偏頭痛、流血傷口的比喻來描述需求痛點的深度遞增。" },
+  { q: "「止痛藥型」產品的特色是？", opts: ["價格便宜","解決急迫的痛點，顧客必須擁有","提供漸進式健康好處","設計美觀"], ans: 1, exp: "止痛藥型產品解決的是急迫需求（Must have），顧客轉化率和留存率都更高。" },
+  { q: "ScoopFree 的商業模式吸引力在於？", opts: ["一次性高價銷售","每月經常性收入（換濾芯）","政府補助","廣告收入"], ans: 1, exp: "ScoopFree 每月每位客戶貢獻 15 美元的濾芯更換收入，是經常性收入模式。" },
+  { q: "Alan Cook 的篩選方法論的核心是？", opts: ["憑直覺選擇","列出明確準則，逐一對照候選機會","詢問投資者意見","隨機選擇"], ans: 1, exp: "Cook 先建立個人化的篩選準則清單，再用它系統化地過濾 50-60 個候選機會。" },
+  { q: "五大評估準則中，最個人化的是？", opts: ["需求顯著性","方案有效性","毛利空間","團隊—機會契合度"], ans: 3, exp: "團隊—機會契合度最取決於創業者個人的能力、熱情和資源，因人而異。" },
+  { q: "顧客獲取成本（CAC）為何重要？", opts: ["是新創最常低估的成本項目","只對大企業重要","與產品品質無關","政府會補貼此項成本"], ans: 0, exp: "CAC 是新創企業最常低估的項目之一，過高的獲取成本會迅速耗盡資金。" },
+  { q: "Ulrich 教授建議篩選的流程是？", opts: ["直接從 30 個想法選 1 個","逐步縮小：30→6-8→3-4→1","只考慮一個最喜歡的想法","讓投資者決定"], ans: 1, exp: "教授建議用錦標賽式逐步縮小範圍，而非一步到位或只考慮一個構想。" },
+  { q: "高毛利為什麼重要？", opts: ["讓產品顯得高級","提供更大的錯誤容忍空間和成長資金","只是會計數字","與競爭力無關"], ans: 1, exp: "高毛利意味著即使犯錯也有緩衝空間，也能為成長提供所需資金。" }
+],
+
+// M6 錦標賽策略
+m6_nav: "6. 錦標賽策略",
+m6_title: "錦標賽策略：分散風險與延遲承諾",
+m6_p1: "Karl T. Ulrich 教授指出，面對創業中無法消除的固有不確定性，唯一已知的有效策略是：分散佈局（Diversify）與延遲承諾（Delay Commitment），等待額外資訊揭露後再做最終決定。",
+m6_p2: "「不確定性是創業的固有屬性——你無法把它分析掉。但你可以考慮多個替代方案，做小額投資，等更多資訊出現後再下大注。」— Karl T. Ulrich",
+m6_p3: "典型創投基金的篩選漏斗：從 1,000+ 次會議中選出 40 筆初始投資，再追加投資約 20 筆，最終只有 1-2 筆成為大勝。這種結構——從大量原始機會經過層層篩選找出卓越者——就是「創新錦標賽」。創業者雖然無法像創投那樣分散到數百家公司，但可以在投入之前先考慮 5-10 個不同的機會。",
+m6_cards: [
+  { title: "創投基金的錦標賽", desc: "1,000+ 會議 → 40 初始投資 → 20 追加投資 → 1-2 大勝。如果沒有不確定性，創投只需投資最終的贏家。問題在於事前無法確知誰會勝出。" },
+  { title: "創業者的迷你錦標賽", desc: "建議在投入之前，先考慮 5-10 個不同機會，做小額探索投資，然後逐步縮小到最終選擇。比起只考慮一個構想就全力投入，這能顯著降低風險。" },
+  { title: "微觀層面的錦標賽", desc: "錦標賽邏輯適用於創業中的每個小決策：Oral-B 從數百個手柄設計中篩選出最終款式；Xpult 從 20 個候選名稱中測試出最終品牌名。" }
+],
+m6_case: { title: "微個案：Oral-B Cross Action 的設計錦標賽", desc: "Oral-B Cross Action 牙刷的手柄設計由 Lunar Design 團隊負責。他們沒有依賴「一位天才設計師的靈感」，而是產生了數百個初始設計概念，從中篩選出數十個製成泡棉模型供手持測試，再進一步縮小到 5 個製成生產級塑膠模型進行消費者測試，最終選出一個方案投入量產。這個過程完美體現了錦標賽邏輯：大量生成→逐步篩選→只留最卓越者。" },
+m6_terms: [
+  { front: "創新錦標賽 Innovation Tournament", back: "從大量原始機會經過層層開發與篩選，最終只保留卓越者的結構化過程。適用於企業策略到產品細節的各個層面。" },
+  { front: "分散佈局 Diversification", back: "同時考慮多個替代方案以降低單一賭注的風險。創投基金投資 40 家公司正是分散佈局的實踐。" },
+  { front: "延遲承諾 Delay Commitment", back: "在獲得更多資訊之前，避免過早做出不可逆的重大決策。先做小額探索投資，等不確定性降低後再加大投入。" }
+],
+m6_q: [
+  { q: "面對創業的固有不確定性，唯一已知的有效策略是？", opts: ["更努力工作","分散佈局與延遲承諾","聘請更好的顧問","等待完美時機"], ans: 1, exp: "Ulrich 明確指出，分散佈局和延遲承諾是唯一已知的有效因應策略。" },
+  { q: "典型創投基金從多少次會議中選出初始投資？", opts: ["100+ 次","500+ 次","1,000+ 次","5,000+ 次"], ans: 2, exp: "典型創投基金會進行 1,000 次以上的會議，最終做出約 40 筆初始投資。" },
+  { q: "Ulrich 建議創業者在投入前應考慮多少個機會？", opts: ["1 個","2-3 個","5-10 個","20-30 個"], ans: 2, exp: "建議在正式投入之前，先探索 5-10 個不同的機會進行比較。" },
+  { q: "Oral-B Cross Action 手柄設計的篩選過程是？", opts: ["一位設計師直接設計","數百個概念→數十個泡棉模型→5 個塑膠模型→1 個最終方案","由消費者投票決定","複製競爭對手的設計"], ans: 1, exp: "Lunar Design 使用了經典的錦標賽結構：從大量到精選到最終一個。" },
+  { q: "「延遲承諾」的核心意義是？", opts: ["拖延做決定","在獲得更多資訊前避免不可逆的重大投入","永遠不做決定","等到完全沒有風險"], ans: 1, exp: "延遲承諾是指在資訊不足時先做小額探索，等不確定性降低後再加大投入。" },
+  { q: "錦標賽邏輯不適用於以下哪個場景？", opts: ["選擇事業方向","產品手柄設計","品牌命名","已經簽約的法律合同"], ans: 3, exp: "錦標賽邏輯適用於尚未做出不可逆決策的各種場景，已簽約的合同不在此列。" },
+  { q: "創投基金最終大勝的投資通常有幾筆？", opts: ["約 10 筆","約 5 筆","1-2 筆","20 筆以上"], ans: 2, exp: "每個基金最終通常只有 1-2 筆成為大勝，另有數筆小規模成功。" },
+  { q: "Xpult 的命名錦標賽過程是？", opts: ["直接選用創辦人的名字","從約 20 個候選名稱→10 個→3 個→消費者測試→最終 1 個","隨機產生","請命名公司處理"], ans: 1, exp: "Xpult 的命名經過多輪篩選和消費者測試，是微觀層面錦標賽的實踐。" }
+],
+
+// M7 外部資源
+m7_nav: "7. 外部資源",
+m7_title: "延伸學習資源",
+m7_desc: "以下資源可幫助您深入探索本單元涵蓋的各項主題。",
+
+// M8 互動實驗室
+mlab_nav: "8. 互動實驗室",
+mlab_title: "互動實驗室：動手探索創業概念",
+mlab_desc: "透過互動工具，親自體驗本單元的核心概念。調整參數、觀察結果、深化理解。",
+
+date: "Version 2026.03.15",
+copyright: "For Educational Use Only",
+architect_label: "Architect:",
+architect_name: "Prof. Shihmin Lo",
+architect_url: "https://www.ibs.ncnu.edu.tw/index.php/faculty/tenured-professor/299-smlo"
+},
+
+en: {
+title: "Entrepreneurial Opportunity: Identify, Evaluate & Act",
+subtitle: "Wharton Online · Interactive Learning Series",
+nav_modules: "Module Menu", nav_prev: "Previous", nav_next: "Next",
+key_terms: "Key Terms", flip_prompt: "Tap to flip", audio_read: "Audio Guide",
+quiz_title: "Module Quiz (Random 4 Questions)",
+submit: "Submit", retry: "Retry",
+score: "Score", correct: "Correct", incorrect: "Incorrect", explanation: "Explanation",
+analytics_title: "Learning Analytics", analytics_desc: "Track your learning progress, interaction frequency, and quiz performance",
+analytics_form_title: "Learner Information",
+analytics_group: "Group", analytics_dept: "Department",
+analytics_dept_ph: "e.g., IBS3", analytics_id: "Student ID", analytics_id_ph: "e.g., B11234567",
+analytics_name: "Name", analytics_name_ph: "Enter your name",
+analytics_export_csv: "Export CSV Record",
+analytics_fill_required: "Complete all fields to unlock export",
+group_options: ["G1","G2","G3","G4","G5","Others"],
+analytics_total_time: "Total Time", analytics_total_clicks: "Total Clicks",
+analytics_overall_acc: "Overall Accuracy",
+analytics_module: "Module", analytics_time: "Time Spent",
+analytics_clicks: "Clicks", analytics_acc: "Accuracy",
+analytics_correct_ans_total: "Correct / Answered / Total",
+analytics_no_data: "Not tested", analytics_sec: "s", analytics_times: "x",
+
+m0_nav: "Overview",
+m0_title: "Entrepreneurial Opportunity: Identify, Evaluate & Act",
+m0_intro: "This module explores how entrepreneurs identify, evaluate, and seize opportunities amid high uncertainty. Through insights from three Wharton professors, you'll learn a complete methodology from idea generation to opportunity screening.",
+m0_why: "Why Is Opportunity Identification Critical?",
+m0_why_desc: "The first step to entrepreneurial success isn't fundraising or team-building—it's finding an opportunity worth pursuing. Research shows most entrepreneurs consider only one idea before committing, but systematically comparing multiple opportunities significantly improves success rates.",
+m0_stats: [
+  { val: "Age 42", label: "Avg. age of successful founders" },
+  { val: "6%", label: "Variance explained by raw idea quality" },
+  { val: "1/1000", label: "VC fund big-win ratio" },
+  { val: "5-10", label: "Recommended opportunities to compare" }
+],
+m0_modules: [
+  { num: "01", title: "Uncertainty in Entrepreneurship", desc: "Understand three types of uncertainty and learn to reduce risk through planning." },
+  { num: "02", title: "Sources of Innovation", desc: "Master push vs. pull innovation models and debunk founder stereotypes." },
+  { num: "03", title: "Customers as Opportunity Sources", desc: "Use crowdsourcing and indirect feedback to let customers ideate and screen." },
+  { num: "04", title: "The VIDE Model", desc: "Quantify idea quality and understand the interplay of execution and external factors." },
+  { num: "05", title: "Assessing Opportunities", desc: "Build systematic screening criteria to compare multiple opportunities." },
+  { num: "06", title: "The Tournament Approach", desc: "Learn the wisdom of diversification and delayed commitment under uncertainty." }
+],
+m0_start: "Start Learning →",
+
+m1_nav: "1. Uncertainty",
+m1_title: "Entrepreneurship & Uncertainty: From Awareness to Management",
+m1_p1: "Prof. Ethan Mollick explains that the core driver of entrepreneurship is uncertainty—you're exploiting an opportunity others haven't seen or acted upon. If the opportunity were obvious and risk-free, someone else would have already done it. Embracing uncertainty is therefore an essential entrepreneurial mindset.",
+m1_p2: "\"You can't eliminate all uncertainty, but through planning you can convert unknown risks into manageable uncertainties, and uncertainties into known facts.\" — Ethan Mollick",
+m1_p3: "Research shows startups that radically changed direction (pivoted) survived at rates equal to or better than those that stuck with their original idea. This means success isn't about guessing right from the start, but building the capacity for continuous learning and rapid adaptation. Methods like Lean Startup, Business Model Canvas, and Discovery-Driven Planning each have advocates, but no single approach has been academically proven superior.",
+m1_cards: [
+  { title: "Known Knowns", desc: "Information already confirmed—e.g., patent granted, contract signed. This is the lowest-risk category of knowledge." },
+  { title: "Known Unknowns", desc: "Variables we know exist but whose outcomes are uncertain—e.g., 'Will we get funding?' 'How will customers react?' These can be reduced through testing and research." },
+  { title: "Unknown Unknowns", desc: "Completely unforeseen events—e.g., market collapse, key personnel departures, disruptive technology. Can only be managed through diversification." }
+],
+m1_case: { title: "Mini-Case: Slack's Legendary Pivot", desc: "Slack started as Tiny Speck, a gaming company building an online game called Glitch. When the game failed, the team realized their internal communication tool was beloved. They pivoted to build an enterprise messaging platform. Slack went public via direct listing in 2019 and was acquired by Salesforce for $27.7 billion in 2021. This case perfectly illustrates Mollick's point: pivoting isn't a sign of failure—it's a demonstration of learning ability." },
+m1_terms: [
+  { front: "Pivot", back: "A startup's radical change in strategic direction based on market feedback. Research shows pivoted companies survive at rates no lower than non-pivoted ones." },
+  { front: "Lean Startup", back: "Eric Ries' methodology emphasizing the Build-Measure-Learn loop, using MVPs to rapidly validate assumptions." },
+  { front: "Discovery-Driven Planning", back: "McGrath & MacMillan's planning method that explicitly lists all assumptions and designs checkpoints for validation in highly uncertain environments." }
+],
+m1_q: [
+  { q: "What is the source of entrepreneurial uncertainty?", opts: ["Government regulations are too complex","Opportunities are unvalidated and outcomes unknowable in advance","Entrepreneurs lack experience","Insufficient funding"], ans: 1, exp: "Entrepreneurship involves exploiting unmet opportunities, making outcomes unknowable in advance." },
+  { q: "Which is an example of an 'Unknown Unknown'?", opts: ["Uncertain if customers will accept the product","A sudden pandemic crashes the market","Uncertain if a bank loan will be approved","Competitors might lower prices"], ans: 1, exp: "Unknown unknowns are completely unforeseen events like a sudden pandemic." },
+  { q: "Research shows the survival rate of startups that pivoted is:", opts: ["Much lower than non-pivoted startups","Equal to or higher than non-pivoted startups","No relevant data exists","Depends on the industry"], ans: 1, exp: "Mollick's research shows pivoted startups survive at rates equal to or better than those that didn't pivot." },
+  { q: "The core role of planning in entrepreneurship is to:", opts: ["Guarantee 100% success","Convert unknown risks into manageable uncertainties","Replace entrepreneurial intuition","Eliminate all risk"], ans: 1, exp: "Planning aims to downgrade uncertainty: unknown risks → known unknowns → known facts." },
+  { q: "The core loop of Lean Startup is:", opts: ["Plan-Do-Check-Act","Build-Measure-Learn","Design-Produce-Sell","Research-Develop-Test"], ans: 1, exp: "Lean Startup emphasizes the Build-Measure-Learn rapid cycle using MVPs." },
+  { q: "The current academic consensus on startup planning methods is:", opts: ["Lean Startup is proven best","Business Model Canvas works best","No single method has been proven superior","Discovery-Driven Planning fits all contexts"], ans: 2, exp: "The professor explicitly states no academic evidence proves any method superior to others." },
+  { q: "What does the Slack case demonstrate?", opts: ["The gaming industry is doomed to fail","Pivoting demonstrates learning ability, not failure","Only software companies can pivot successfully","Internal tools have no commercial value"], ans: 1, exp: "Slack pivoted from a failed game to an enterprise messaging platform worth $27.7B." },
+  { q: "The core feature of Discovery-Driven Planning is:", opts: ["No assumptions needed","Explicitly listing assumptions and designing checkpoints","Only applicable to large corporations","Fully dependent on data analysis"], ans: 1, exp: "DDP requires entrepreneurs to list all assumptions and validate them at key checkpoints." }
+],
+
+m2_nav: "2. Sources of Innovation",
+m2_title: "Sources of Innovation: Push & Pull",
+m2_p1: "Prof. Karl T. Ulrich defines innovation as 'a new match between a solution and a need.' Innovation can come from two directions: Pull Innovation starts from customer needs and seeks the best solution; Push Innovation starts from technological capabilities and seeks suitable applications.",
+m2_p2: "\"Three fundamental questions for value creation: Is the need real? Does the solution meet the need? Is the customer willing to pay far more than it costs to deliver?\" — Karl T. Ulrich",
+m2_p3: "Ulrich also debunks three founder myths: research shows the average age of successful founders is 42 (not early 20s); about 38% of US businesses are founded by women, 36% by minorities; and while overconfidence drives people to start ventures, it doesn't predict success.",
+m2_cards: [
+  { title: "Pull Innovation", desc: "Starts from customer pain points: identify the need first, then find or develop the best solution. This is the model used in most product design textbooks. Example: Nest smart thermostat was designed to address pain points of traditional thermostats." },
+  { title: "Push Innovation", desc: "Starts from technological capabilities: have the technology, then seek market applications. Higher risk because real customer needs may not exist. Example: Segway had brilliant self-balancing tech but failed to find a mass market." }
+],
+m2_case: { title: "Mini-Case: Segway's Push Innovation Lesson", desc: "Segway launched in 2001 hailed as 'the greatest transportation revolution since the automobile.' Inventor Dean Kamen raised $38M from John Doerr; Steve Jobs predicted its impact would rival PCs. The company expected 50,000 units in year one but sold fewer than 30,000 over seven years. Production ended in 2020. Reasons: $5,000 price tag, too big for sidewalks yet too slow for roads, lack of supporting infrastructure, insufficient customer validation. A classic lesson in push innovation neglecting 'Is the need real?'" },
+m2_terms: [
+  { front: "Push Innovation", back: "Innovation starting from technology/capabilities seeking market applications. Higher risk—must validate that real demand exists." },
+  { front: "Pull Innovation", back: "Innovation starting from customer needs seeking the best solution. Generally lower risk since the need is confirmed." },
+  { front: "Value Creation Formula", back: "Price – Cost >> 0: The price customers will pay must far exceed the cost of delivering the solution to create sustainable value." }
+],
+m2_q: [
+  { q: "How does Prof. Ulrich define 'innovation'?", opts: ["Inventing entirely new technology","A new match between a solution and a need","A patented product","A company that IPOs"], ans: 1, exp: "Innovation isn't invention—it's a new connection between solution and need." },
+  { q: "The fundamental cause of Segway's failure was:", opts: ["Technology wasn't advanced enough","Push innovation without validating customer needs","Too many competitors","Government banned it"], ans: 1, exp: "Segway had brilliant technology but failed to validate real mass-market demand." },
+  { q: "The average age of successful founders is:", opts: ["22","32","42","52"], ans: 2, exp: "Research shows the average successful founder age is 42, peaking between 45-52." },
+  { q: "Which is NOT one of the three value creation questions?", opts: ["Is the need real?","Does the solution meet the need?","Is price higher than cost?","Does the team have MBA degrees?"], ans: 3, exp: "The three questions are: real need, effective solution, price vs. cost. Education isn't one." },
+  { q: "The impact of overconfidence on entrepreneurship is:", opts: ["Increases both entry and success","Increases entry but doesn't predict success","Decreases entry but increases success","No impact at all"], ans: 1, exp: "Overconfidence drives people into entrepreneurship but doesn't predict whether they succeed." },
+  { q: "The Nest smart thermostat represents which innovation model?", opts: ["Push innovation","Pull innovation","Disruptive innovation","Incremental innovation"], ans: 1, exp: "Nest was designed starting from user pain points with traditional thermostats—classic pull innovation." },
+  { q: "Approximately what percentage of US businesses are founded by women?", opts: ["About 18%","About 28%","About 38%","About 48%"], ans: 2, exp: "Research data shows approximately 38% of US businesses are founded by women." },
+  { q: "The biggest risk of Push Innovation is:", opts: ["Technology is too expensive","May not find real market demand","Cannot obtain patents","Insufficient team capabilities"], ans: 1, exp: "The core risk of push innovation is having technology but no corresponding market need." }
+],
+
+m3_nav: "3. Customers as Sources",
+m3_title: "Customers as Sources of Opportunities",
+m3_p1: "Prof. Kartik Hosanagar proposes that customers can simultaneously serve as 'idea generators' and 'idea screeners.' Companies can use crowdsourcing platforms for direct idea submission, or mine product reviews and social media for indirect feedback to discover unmet needs.",
+m3_p2: "\"Crowdsourcing not only generates a large volume of diverse ideas—its voting mechanism can serve as a proxy for demand. But remember: voting is free, purchasing is not.\" — Kartik Hosanagar",
+m3_p3: "Threadless is the classic crowdsourcing case: ~1,000 design submissions per week from 300,000 global contributors who submitted over 500,000 designs—with zero in-house designers. An alternative path is indirect feedback: C&A Marketing mines Amazon product reviews to develop new products, building a 50,000-product portfolio across its Jumbl and Ivation brands.",
+m3_cards: [
+  { title: "Direct Crowdsourcing Model", desc: "Threadless: global designers submit T-shirt designs → community votes → management selects from top 5% → prints and sells. Dell IdeaStorm received 24,000+ product suggestions; MyStarbucks Idea received 200,000+ ideas." },
+  { title: "Indirect Feedback Mining", desc: "C&A Marketing discovers pain points from Amazon reviews—e.g., multiple consumers complained Bluetooth speakers weren't waterproof, leading them to develop waterproof models. No direct customer relationship needed." },
+  { title: "Voting as Demand Proxy", desc: "Crowd voting reflects preferences but has biases: voting is costless while purchasing isn't; voters may not represent typical consumers. Threadless combines crowd voting with managerial judgment for final decisions." }
+],
+m3_case: { title: "Mini-Case: LEGO Ideas Co-Creation Platform", desc: "LEGO launched its crowdsourcing platform LEGO Ideas in 2008, accumulating 2.8M+ users and 135,000+ submissions. Process: fans submit designs → reach 10,000 votes to enter official review → selected creators receive 1% of product revenue. Successes include the Medieval Blacksmith and Women of NASA sets. LEGO Ideas not only provides endless product ideas but builds powerful fan community and brand loyalty—perfectly embodying Hosanagar's concept of letting customers both ideate and screen." },
+m3_terms: [
+  { front: "Crowdsourcing", back: "Outsourcing tasks traditionally done internally (design, ideation) to a large, undefined crowd to gain greater volume and diversity." },
+  { front: "Indirect Feedback", back: "Mining customer needs from product reviews, social media, and other digital traces—suitable for companies without direct customer relationships." },
+  { front: "Idea Selection", back: "The process of choosing the most promising ideas from many. Crowd voting serves as a demand proxy but should be combined with managerial judgment." }
+],
+m3_q: [
+  { q: "The core of Threadless's business model is:", opts: ["Hiring top designers","Crowdsourced design + community voting selection","Massive advertising","Brand collaborations"], ans: 1, exp: "Threadless lets global designers submit designs screened by community votes, with zero in-house designers." },
+  { q: "The limitation of crowd voting as a demand proxy is:", opts: ["Too few voters","Voting is free and may not reflect actual purchase intent","Results are too accurate","Technically difficult to implement"], ans: 1, exp: "Voting is free but purchasing costs money, so voting preferences may not match buying behavior." },
+  { q: "C&A Marketing's product development strategy is:", opts: ["Develop all products internally","Mine customer pain points from Amazon reviews","Hire external consultants","Copy competitor products"], ans: 1, exp: "C&A Marketing analyzes Amazon product reviews to discover unmet needs for new product development." },
+  { q: "The entry threshold for LEGO Ideas is:", opts: ["Pay a registration fee","Receive 10,000 votes of support","Pass a design professional exam","Be recommended by LEGO staff"], ans: 1, exp: "Submissions need 10,000 votes to enter the LEGO official review stage." },
+  { q: "Prof. Hosanagar believes crowdsourcing best generates which type of innovation?", opts: ["Completely disruptive breakthrough innovation","Practical but sometimes incremental product improvements","Pure academic research","Only applicable to software industry"], ans: 1, exp: "The professor notes crowdsourcing suits practical incremental improvements; truly breakthrough innovations are harder to crowdsource." },
+  { q: "Which is NOT among the three incentives for crowdsourcing participation?", opts: ["Monetary rewards","Solving personal problems","Skill development","Receiving company equity"], ans: 3, exp: "Three incentives: monetary rewards, solving own needs, skill development. Company equity is not listed." },
+  { q: "What characterizes Threadless's design contributors?", opts: ["All American designers","70% from outside US, ages 14 to 65","Professional designers only","Must have design degrees"], ans: 1, exp: "Threadless contributors are extremely diverse: 70% from outside the US, ages from 14-year-olds to 65-year-old retirees." },
+  { q: "The greatest value of crowdsourcing for startups is:", opts: ["Reducing office rent","Accelerating idea generation and customer validation","Replacing all employees","Obtaining government subsidies"], ans: 1, exp: "Crowdsourcing simultaneously accelerates idea generation and customer validation—a powerful early-stage tool." }
+],
+
+m4_nav: "4. VIDE Model",
+m4_title: "Importance of the Idea: The VIDE Model",
+m4_p1: "Prof. Karl T. Ulrich, drawing from his own experience (Xootr scooter success vs. Voloci electric motorbike failure), developed the VIDE model: Value = f(Idea, Development, Exogenous factors). Value depends on the interplay of raw idea quality, the team's development execution, and external environmental factors.",
+m4_p2: "\"Don't attribute wild success entirely to your brilliance, nor failure entirely to your incompetence—exogenous factors matter far more than you think.\" — Karl T. Ulrich",
+m4_p3: "Ulrich and Kornish studied 100+ products on Quirky.com and found that raw idea quality (consumer purchase intent) explains only about 6% of sales rate variance—but a one standard deviation better idea corresponds to roughly 75% higher sales. Another key finding: four random consumers predict idea quality better than seven experts.",
+m4_cards: [
+  { title: "I — Idea", desc: "Like the mine location in gold mining. 'Is there ore in the ground?' = Is there a real customer pain point? Raw idea quality explains ~6% of outcome variance, but one sigma improvement means ~75% sales growth." },
+  { title: "D — Development", desc: "Like mining efficiency. Having the right team, skills, effort, and strategy is key to turning ideas into successful products. This explains most outcome variance." },
+  { title: "E — Exogenous Factors", desc: "Like gold price fluctuations. Market conditions, regulatory changes, technology waves—completely beyond the entrepreneur's control but with major impact on outcomes." }
+],
+m4_case: { title: "Mini-Case: CabStalker → Uber's Lesson", desc: "In 2009, Wharton students proposed 'CabStalker'—a smartphone ride-hailing concept nearly identical to Uber's eventual functionality. Yet those students didn't create Uber. After Uber launched, the same idea was quickly replicated by Lyft, SideCar, and others. This shows that ideas can be publicly available; true differentiation comes from D (development execution). Uber succeeded not because its idea was unique, but because of the team's execution, timing, and scaling ability." },
+m4_terms: [
+  { front: "VIDE Model", back: "V = f(I, D, E): Venture value depends on Idea quality, Development execution, and Exogenous factors—all three are essential." },
+  { front: "Five-Box Purchase Intent", back: "Standard market research tool: consumers rate ideas from 'Definitely would not buy' to 'Definitely would buy' on a 5-point scale—an effective predictor of sales." },
+  { front: "R² Explained Variance", back: "Statistical measure of how much variance in the dependent variable (e.g., sales) is explained by the independent variable (e.g., idea quality). In the Quirky study, R² ≈ 6%." }
+],
+m4_q: [
+  { q: "In the VIDE model, V stands for:", opts: ["Vision","Value","Venture","Velocity"], ans: 1, exp: "V represents Value, which is a function of Idea, Development, and Exogenous factors." },
+  { q: "The Quirky.com study found raw idea quality explains what % of sales variance?", opts: ["About 1%","About 6%","About 25%","About 50%"], ans: 1, exp: "Raw idea purchase intent explains about 6% of sales rate variance (using log sales rate)." },
+  { q: "A one standard deviation better idea corresponds to how much sales increase?", opts: ["About 25%","About 50%","About 75%","About 100%"], ans: 2, exp: "Research shows a one-sigma better idea corresponds to approximately 75% higher sales." },
+  { q: "Four random consumers vs. seven experts—who predicts idea quality better?", opts: ["Seven experts","Four random consumers","They're equal","Cannot be compared"], ans: 1, exp: "Research found four random consumers predict idea quality better than seven experts." },
+  { q: "The CabStalker case demonstrates:", opts: ["The idea is the most important success factor","A good idea guarantees success","Ideas can be publicly available; execution is the differentiator","Students shouldn't start companies"], ans: 2, exp: "Uber's concept was proposed by students in 2009, showing ideas aren't unique—execution matters." },
+  { q: "E in the VIDE model is most similar to:", opts: ["The entrepreneur's education level","The team's technical ability","Weather—it affects you but you can't control it","Investor preferences"], ans: 2, exp: "E represents exogenous factors—like weather, they impact you but are beyond your control." },
+  { q: "Sabeer Bhatia writing two business plans for Hotmail reflects what belief?", opts: ["He didn't trust investors","He believed the idea itself was extremely valuable and needed protection","He had two different business ideas","He wanted more money"], ans: 1, exp: "Bhatia used a decoy plan as bait, only revealing the real idea to trusted VCs—reflecting his belief in the idea's extreme value." },
+  { q: "Prof. Ulrich's advice to entrepreneurs is:", opts: ["A good idea is all you need","Idea, execution, and luck all matter—but since idea quality is easy to measure, start with a great idea","Don't waste time on idea quality","Only focus on team building"], ans: 1, exp: "Idea quality explains only part of variance, but since it's easy to measure and fully controllable, it's worth investing time to find great ideas." }
+],
+
+m5_nav: "5. Assessing Opportunities",
+m5_title: "Assessing Opportunities: Systematic Screening",
+m5_p1: "Prof. Karl T. Ulrich notes that if you have multiple candidate opportunities at this stage, you're already ahead of most entrepreneurs who consider only one idea. The key question is: how do you choose which opportunity deserves your commitment?",
+m5_p2: "\"The ideal opportunity: many people with deep pain, your solution is a painkiller not a vitamin, large gross margins, customers are easy to acquire, and your team is the best in the world at executing this.\" — Karl T. Ulrich",
+m5_p3: "Ulrich illustrates systematic screening through his former student Alan Cook's case: Cook founded ScoopFree (automated cat litter box) earning $15/month in recurring revenue per customer. After selling the company, he listed 9 explicit screening criteria (large market, high margins, recurring revenue, leverage existing team, etc.) and screened 50-60 opportunities to find his next venture.",
+m5_cards: [
+  { title: "Need Significance", desc: "How many people have this need? How deep is the pain? Is it an 'itch,' a 'migraine,' or a 'bleeding wound'? Ideal opportunities combine breadth (many potential customers) and depth (intense pain)." },
+  { title: "Solution Effectiveness", desc: "Is your solution a 'vitamin' (nice to have) or a 'painkiller' (must have)? Painkiller products have far higher conversion rates and retention." },
+  { title: "Gross Margin", desc: "The gap between what customers will pay and your costs. Depends on cost efficiency, willingness to pay, and competitive intensity." },
+  { title: "Customer Acquisition Difficulty", desc: "Are target customers easy to identify? Can you reach them? Can you convince them to try? CAC is one of the most commonly underestimated items." },
+  { title: "Team-Opportunity Fit", desc: "Does your team have the best capabilities to execute? Is there passion? Can you access required resources including capital? This is the most personal dimension." }
+],
+m5_case: { title: "Mini-Case: Alan Cook's Systematic Screening", desc: "After successfully selling ScoopFree, Cook developed explicit screening criteria: large market, high margins, strong recurring revenue, leverage existing engineering team, use China sourcing connections, support direct-to-consumer/subscription sales, resonate with media, and have obvious potential acquirers. His team listed 50-60 candidate opportunities and systematically screened them against these criteria. This structured approach far outperforms 'just going with the first idea that comes to mind.'" },
+m5_terms: [
+  { front: "Painkiller vs. Vitamin", back: "Painkiller products solve urgent pain (must have); vitamin products offer gradual benefits (nice to have). The former are much easier to gain customer adoption." },
+  { front: "Gross Margin", back: "Price minus direct costs (Price – Cost), reflecting core business profitability. High margins provide greater tolerance for mistakes." },
+  { front: "Customer Acquisition Cost (CAC)", back: "The average cost to acquire one new customer. One of the most commonly underestimated items for startups." }
+],
+m5_q: [
+  { q: "The best metaphor for 'need depth' when assessing opportunities is:", opts: ["Itch → Migraine → Bleeding wound","Low → Medium → High","Simple → Difficult → Impossible","Cheap → Moderate → Expensive"], ans: 0, exp: "Ulrich uses itch, migraine, and bleeding wound as metaphors for increasing pain depth." },
+  { q: "A 'painkiller' product is characterized by:", opts: ["Low price","Solving an urgent pain point customers must have","Providing gradual health benefits","Beautiful design"], ans: 1, exp: "Painkiller products address urgent needs (must have) with higher conversion and retention rates." },
+  { q: "ScoopFree's business model appeal lies in:", opts: ["One-time premium sales","Monthly recurring revenue (cartridge replacement)","Government subsidies","Advertising revenue"], ans: 1, exp: "ScoopFree earned $15/month per customer in cartridge replacement revenue—a recurring revenue model." },
+  { q: "The core of Alan Cook's screening methodology is:", opts: ["Following intuition","Listing explicit criteria and systematically comparing candidates","Asking investors for advice","Random selection"], ans: 1, exp: "Cook first built a personalized criteria checklist, then systematically filtered 50-60 candidate opportunities." },
+  { q: "The most personal of the five assessment criteria is:", opts: ["Need significance","Solution effectiveness","Gross margin","Team-opportunity fit"], ans: 3, exp: "Team-opportunity fit most depends on the entrepreneur's personal capabilities, passion, and resources." },
+  { q: "Why is Customer Acquisition Cost (CAC) important?", opts: ["It's the most commonly underestimated cost item for startups","Only relevant for large companies","Unrelated to product quality","Government subsidizes this cost"], ans: 0, exp: "CAC is one of the most commonly underestimated items—excessive acquisition costs quickly drain funds." },
+  { q: "Prof. Ulrich recommends the screening process should be:", opts: ["Directly pick 1 from 30 ideas","Progressively narrow: 30 → 6-8 → 3-4 → 1","Only consider your favorite idea","Let investors decide"], ans: 1, exp: "The professor recommends tournament-style progressive narrowing rather than one-step selection." },
+  { q: "Why are high gross margins important?", opts: ["Makes the product seem premium","Provides greater error tolerance and growth capital","Just an accounting number","Unrelated to competitiveness"], ans: 1, exp: "High margins mean even mistakes have a buffer, and growth has the necessary funding." }
+],
+
+m6_nav: "6. Tournament Approach",
+m6_title: "The Tournament Approach: Diversify & Delay Commitment",
+m6_p1: "Prof. Karl T. Ulrich states that facing entrepreneurship's irreducible uncertainty, the only known effective strategy is: Diversify across opportunities and Delay Commitment until additional information is revealed.",
+m6_p2: "\"Uncertainty is an intrinsic property of entrepreneurship—you can't analyze it away. But you can consider multiple alternatives, make small investments, and wait for more information before placing your big bet.\" — Karl T. Ulrich",
+m6_p3: "A typical VC fund's screening funnel: 1,000+ meetings → 40 initial investments → 20 follow-on investments → 1-2 big wins. This structure—from many raw opportunities through successive filters to find exceptional ones—is an 'Innovation Tournament.' While entrepreneurs can't diversify across hundreds of companies like VCs, they should consider 5-10 different opportunities before committing.",
+m6_cards: [
+  { title: "VC Fund Tournament", desc: "1,000+ meetings → 40 initial investments → 20 follow-on → 1-2 big wins. Without uncertainty, VCs would only invest in the eventual winners. The problem is you can't know in advance who will win." },
+  { title: "Entrepreneur's Mini-Tournament", desc: "Before committing, consider 5-10 different opportunities, make small exploratory investments, then progressively narrow to the final choice. Much less risky than committing to the first idea that comes to mind." },
+  { title: "Micro-Level Tournaments", desc: "Tournament logic applies to every small decision in entrepreneurship: Oral-B screened hundreds of handle designs to find the final one; Xpult tested 20 candidate names to select the final brand name." }
+],
+m6_case: { title: "Mini-Case: Oral-B Cross Action Design Tournament", desc: "The Oral-B Cross Action toothbrush handle was designed by Lunar Design. Rather than relying on 'one genius designer's inspiration,' they generated hundreds of initial design concepts, narrowed to dozens of foam models for hand-hold testing, further narrowed to 5 production-intent plastic models for consumer testing, and finally selected one for mass production. This process perfectly embodies tournament logic: generate many → progressively filter → keep only the exceptional." },
+m6_terms: [
+  { front: "Innovation Tournament", back: "A structured process of generating many raw opportunities, applying successive development steps and filters, until only exceptional opportunities remain. Applies from business strategy to product details." },
+  { front: "Diversification", back: "Considering multiple alternatives simultaneously to reduce risk from any single bet. VC funds investing in 40 companies is diversification in practice." },
+  { front: "Delay Commitment", back: "Avoiding premature irreversible major decisions until more information is available. Make small exploratory investments first, then increase investment as uncertainty decreases." }
+],
+m6_q: [
+  { q: "The only known effective strategy for entrepreneurial uncertainty is:", opts: ["Work harder","Diversify and delay commitment","Hire better consultants","Wait for perfect timing"], ans: 1, exp: "Ulrich explicitly states diversification and delayed commitment is the only known effective strategy." },
+  { q: "A typical VC fund screens from how many meetings to initial investments?", opts: ["100+ meetings","500+ meetings","1,000+ meetings","5,000+ meetings"], ans: 2, exp: "A typical VC fund holds 1,000+ meetings, ultimately making about 40 initial investments." },
+  { q: "Ulrich recommends entrepreneurs consider how many opportunities before committing?", opts: ["1","2-3","5-10","20-30"], ans: 2, exp: "The recommendation is to explore 5-10 different opportunities before formally committing." },
+  { q: "The Oral-B Cross Action handle design process was:", opts: ["One designer created it directly","Hundreds of concepts → dozens of foam models → 5 plastic models → 1 final","Consumer voting decided","Copied a competitor's design"], ans: 1, exp: "Lunar Design used classic tournament structure: from many to selective to the final one." },
+  { q: "The core meaning of 'Delay Commitment' is:", opts: ["Procrastinating on decisions","Avoiding irreversible major investments until more information is available","Never making decisions","Waiting until there's zero risk"], ans: 1, exp: "Delay commitment means making small exploratory investments first, increasing commitment as uncertainty decreases." },
+  { q: "Tournament logic does NOT apply to:", opts: ["Choosing a business direction","Product handle design","Brand naming","An already-signed legal contract"], ans: 3, exp: "Tournament logic applies to decisions not yet made irreversibly; signed contracts don't qualify." },
+  { q: "How many big wins does a typical VC fund produce?", opts: ["About 10","About 5","1-2","20+"], ans: 2, exp: "Each fund typically produces only 1-2 big wins, plus several smaller successes." },
+  { q: "Xpult's naming tournament process was:", opts: ["Used the founder's name","~20 candidates → 10 → 3 → consumer testing → 1 final","Randomly generated","Hired a naming company"], ans: 1, exp: "Xpult's naming went through multiple rounds of screening and consumer testing—a micro-level tournament." }
+],
+
+m7_nav: "7. Resources",
+m7_title: "Extended Learning Resources",
+m7_desc: "The following resources help you explore topics covered in this module in greater depth.",
+
+mlab_nav: "8. Interactive Lab",
+mlab_title: "Interactive Lab: Hands-On Exploration",
+mlab_desc: "Use interactive tools to experience core concepts from this module. Adjust parameters, observe results, and deepen your understanding.",
+
+date: "Version 2026.03.15",
+copyright: "For Educational Use Only",
+architect_label: "Architect:",
+architect_name: "Prof. Shihmin Lo",
+architect_url: "https://www.ibs.ncnu.edu.tw/index.php/faculty/tenured-professor/299-smlo"
+}
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   SVG ICONS
+   ═══════════════════════════════════════════════════════════════ */
+const IconBookOpen = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+const IconAlertTriangle = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
+const IconChevronRight = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6"/></svg>;
+const IconChevronUp = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="18 15 12 9 6 15"/></svg>;
+const IconMenu = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>;
+const IconX = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+const IconMoon = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>;
+const IconSun = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>;
+const IconPlay = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"/></svg>;
+const IconPause = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>;
+const IconSquare = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>;
+const IconArrowRight = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>;
+const IconBarChart2 = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>;
+const IconGlobe = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
+const IconTrendingUp = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>;
+const IconCpu = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>;
+const IconLayers = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>;
+const IconFlag = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>;
+const IconZap = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+const IconTarget = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
+const IconUsers = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+const IconZapLab = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/></svg>;
+const IconExternalLink = ({size=24,className=""})=><svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
+
+const N = 6; // learning modules count
+const TOTAL = 1 + N + 3; // M0 + 6 learning + Resources + Lab + Analytics = 10
+
+/* ═══════════════════════════════════════════════════════════════
+   REUSABLE COMPONENTS
+   ═══════════════════════════════════════════════════════════════ */
+const FlipCard = ({ front, back, t }) => {
+  const [flipped, setFlipped] = useState(false);
+  return (
+    <div className="perspective cursor-pointer h-36" onClick={() => setFlipped(!flipped)}>
+      <div className={`transform-style-3d relative w-full h-full transition-transform duration-500 ${flipped ? 'rotate-y-180' : ''}`}>
+        <div className="backface-hidden absolute inset-0 bg-white dark:bg-slate-800 rounded-xl p-4 flex flex-col items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm">
+          <p className="font-serif font-bold text-center text-[#004030] dark:text-[#D8C3A5] text-sm">{front}</p>
+          <p className="text-xs text-slate-400 mt-2">{t.flip_prompt}</p>
+        </div>
+        <div className="backface-hidden rotate-y-180 absolute inset-0 bg-[#004030] dark:bg-slate-700 rounded-xl p-4 flex items-center justify-center">
+          <p className="text-sm text-center text-[#D8C3A5] dark:text-slate-200 leading-relaxed">{back}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ModuleQuiz = ({ questions, t, moduleId, onQuizSubmit }) => {
+  const [selected, setSelected] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [quizIndices] = useState(() =>
+    [...Array(questions.length).keys()].sort(() => Math.random() - 0.5).slice(0, 4)
+  );
+  const handleSubmit = () => {
+    if (Object.keys(selected).length < quizIndices.length) return;
+    const correctCount = quizIndices.filter((qIdx, i) => selected[i] === questions[qIdx].ans).length;
+    setSubmitted(true);
+    onQuizSubmit(moduleId, correctCount, quizIndices.length);
+  };
+  const correctCount = submitted ? quizIndices.filter((qIdx, i) => selected[i] === questions[qIdx].ans).length : 0;
+  return (
+    <div className="mt-8 bg-slate-50 dark:bg-slate-900 rounded-2xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700">
+      <h3 className="font-serif font-bold text-xl text-[#004030] dark:text-[#D8C3A5] mb-6 flex items-center">
+        <IconBookOpen size={20} className="mr-2"/>{t.quiz_title}
+      </h3>
+      {quizIndices.map((qIdx, qi) => {
+        const q = questions[qIdx];
+        return (
+          <div key={qIdx} className="mb-6">
+            <p className="font-semibold text-slate-800 dark:text-slate-200 mb-3">{qi+1}. {q.q}</p>
+            <div className="space-y-2">
+              {q.opts.map((opt, oi) => {
+                let cls = "w-full text-left px-4 py-2.5 rounded-lg border text-sm transition-colors ";
+                if (!submitted) cls += selected[qi] === oi ? "border-[#004030] bg-[#004030]/10 dark:bg-[#D8C3A5]/10 text-[#004030] dark:text-[#D8C3A5] font-semibold" : "border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300";
+                else if (oi === q.ans) cls += "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 font-semibold";
+                else if (selected[qi] === oi) cls += "border-red-400 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400";
+                else cls += "border-slate-200 dark:border-slate-600 text-slate-500";
+                return <button key={oi} className={cls} onClick={() => !submitted && setSelected({...selected, [qi]: oi})}>{opt}</button>;
+              })}
+            </div>
+            {submitted && <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 italic">{t.explanation}：{q.exp}</p>}
+          </div>
+        );
+      })}
+      {!submitted ? (
+        <button onClick={handleSubmit} disabled={Object.keys(selected).length < quizIndices.length}
+          className="px-6 py-2.5 bg-[#004030] dark:bg-[#D8C3A5] text-white dark:text-[#004030] font-bold rounded-lg disabled:opacity-40 hover:bg-[#002b20] dark:hover:bg-white transition-colors">
+          {t.submit}
+        </button>
+      ) : (
+        <div className="flex items-center space-x-4">
+          <span className="font-bold text-lg text-[#004030] dark:text-[#D8C3A5]">{t.score}：{correctCount} / {quizIndices.length}</span>
+          <button onClick={() => { setSelected({}); setSubmitted(false); }} className="px-4 py-2 border border-[#004030] dark:border-[#D8C3A5] text-[#004030] dark:text-[#D8C3A5] rounded-lg hover:bg-[#004030]/10 text-sm font-semibold transition-colors">{t.retry}</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const LinkCard = ({label, url, desc}) => (
+  <a href={url} target="_blank" rel="noopener noreferrer"
+    className="block bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:border-[#004030] dark:hover:border-[#D8C3A5] hover:shadow-md transition-all group">
+    <div className="flex items-start justify-between gap-2 mb-2">
+      <span className="font-bold font-serif text-sm text-[#004030] dark:text-[#D8C3A5] group-hover:underline leading-snug">{label}</span>
+      <IconExternalLink size={14} className="shrink-0 opacity-40 group-hover:opacity-100 mt-0.5"/>
+    </div>
+    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{desc}</p>
+  </a>
+);
+
+/* ═══════════════════════════════════════════════════════════════
+   LAB COMPONENTS (top-level, outside App)
+   ═══════════════════════════════════════════════════════════════ */
+const VIDELab = ({lang}) => {
+  const [idea, setIdea] = useState(50);
+  const [dev, setDev] = useState(50);
+  const [exo, setExo] = useState(50);
+  const value = Math.round((idea * 0.25 + dev * 0.5 + exo * 0.25) * 1.5);
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
+      <h4 className="font-serif font-bold text-lg text-[#004030] dark:text-[#D8C3A5] mb-4">{lang==='zh'?'VIDE 模型模擬器':'VIDE Model Simulator'}</h4>
+      <p className="text-sm text-slate-500 mb-4">{lang==='zh'?'調整三個因素，觀察價值如何變化（D 的權重最大）':'Adjust three factors and observe how value changes (D has the highest weight)'}</p>
+      {[
+        {label: lang==='zh'?'I 構想品質':'I Idea Quality', val: idea, set: setIdea, color: 'bg-blue-500'},
+        {label: lang==='zh'?'D 開發執行力':'D Development', val: dev, set: setDev, color: 'bg-green-500'},
+        {label: lang==='zh'?'E 外生因素':'E Exogenous', val: exo, set: setExo, color: 'bg-amber-500'}
+      ].map((s,i) => (
+        <div key={i} className="mb-4">
+          <div className="flex justify-between text-sm mb-1"><span className="font-medium">{s.label}</span><span className="font-bold">{s.val}</span></div>
+          <input type="range" min="0" max="100" value={s.val} onChange={e=>s.set(+e.target.value)} className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-[#004030] dark:accent-[#D8C3A5]"/>
+        </div>
+      ))}
+      <div className="mt-4 text-center p-4 bg-[#004030] rounded-xl">
+        <p className="text-[#D8C3A5] text-sm">{lang==='zh'?'預估價值分數':'Estimated Value Score'}</p>
+        <p className="text-4xl font-black text-white font-serif">{value}</p>
+      </div>
+    </div>
+  );
+};
+
+const TournamentLab = ({lang}) => {
+  const [ideas, setIdeas] = useState(100);
+  const r1 = Math.round(ideas * 0.3);
+  const r2 = Math.round(r1 * 0.25);
+  const final = Math.max(1, Math.round(r2 * 0.3));
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
+      <h4 className="font-serif font-bold text-lg text-[#004030] dark:text-[#D8C3A5] mb-4">{lang==='zh'?'錦標賽漏斗模擬':'Tournament Funnel Simulator'}</h4>
+      <p className="text-sm text-slate-500 mb-4">{lang==='zh'?'調整初始構想數量，觀察每輪篩選後的存活數':'Adjust initial ideas count and observe survivors after each round'}</p>
+      <div className="mb-4">
+        <div className="flex justify-between text-sm mb-1"><span>{lang==='zh'?'初始構想':'Initial Ideas'}</span><span className="font-bold">{ideas}</span></div>
+        <input type="range" min="10" max="500" value={ideas} onChange={e=>setIdeas(+e.target.value)} className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-[#004030] dark:accent-[#D8C3A5]"/>
+      </div>
+      <div className="flex items-center justify-between gap-2 text-center">
+        {[
+          {label: lang==='zh'?'初始':'Start', val: ideas, bg: 'bg-slate-100 dark:bg-slate-700'},
+          {label: lang==='zh'?'第一輪':'Round 1', val: r1, bg: 'bg-blue-50 dark:bg-blue-900/20'},
+          {label: lang==='zh'?'第二輪':'Round 2', val: r2, bg: 'bg-green-50 dark:bg-green-900/20'},
+          {label: lang==='zh'?'最終':'Final', val: final, bg: 'bg-[#004030] text-white'}
+        ].map((s,i) => (
+          <React.Fragment key={i}>
+            <div className={`${s.bg} rounded-xl p-3 flex-1`}>
+              <p className="text-2xl font-black font-serif">{s.val}</p>
+              <p className="text-xs mt-1 opacity-70">{s.label}</p>
+            </div>
+            {i < 3 && <span className="text-slate-400">→</span>}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const OpportunityScorer = ({lang}) => {
+  const dims = lang==='zh'
+    ? ['需求顯著性','方案有效性','毛利空間','顧客獲取','團隊契合']
+    : ['Need Significance','Solution Effectiveness','Gross Margin','Customer Acquisition','Team Fit'];
+  const [scores, setScores] = useState([3,3,3,3,3]);
+  const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
+      <h4 className="font-serif font-bold text-lg text-[#004030] dark:text-[#D8C3A5] mb-4">{lang==='zh'?'機會評分卡':'Opportunity Scorecard'}</h4>
+      <p className="text-sm text-slate-500 mb-4">{lang==='zh'?'為你的機會在五個維度上打分（1-5）':'Rate your opportunity across five dimensions (1-5)'}</p>
+      {dims.map((d,i) => (
+        <div key={i} className="mb-3">
+          <div className="flex justify-between text-sm mb-1"><span>{d}</span><span className="font-bold">{scores[i]}</span></div>
+          <input type="range" min="1" max="5" step="1" value={scores[i]} onChange={e=>{const s=[...scores];s[i]=+e.target.value;setScores(s);}} className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-[#004030] dark:accent-[#D8C3A5]"/>
+        </div>
+      ))}
+      <div className="mt-4 text-center p-3 bg-slate-100 dark:bg-slate-700 rounded-xl">
+        <p className="text-sm opacity-70">{lang==='zh'?'綜合評分':'Overall Score'}</p>
+        <p className="text-3xl font-black font-serif text-[#004030] dark:text-[#D8C3A5]">{avg} / 5</p>
+      </div>
+    </div>
+  );
+};
+
+const UncertaintyLab = ({lang}) => {
+  const [known, setKnown] = useState(20);
+  const [unknown, setUnknown] = useState(40);
+  const risk = 100 - known - unknown;
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
+      <h4 className="font-serif font-bold text-lg text-[#004030] dark:text-[#D8C3A5] mb-4">{lang==='zh'?'不確定性儀表板':'Uncertainty Dashboard'}</h4>
+      <p className="text-sm text-slate-500 mb-4">{lang==='zh'?'調整已知與不確定性的比例，觀察未知風險如何變化':'Adjust known facts vs. uncertainties and see how unknown risks change'}</p>
+      <div className="mb-3">
+        <div className="flex justify-between text-sm mb-1"><span>{lang==='zh'?'已知事實':'Known Facts'}</span><span className="font-bold text-green-600">{known}%</span></div>
+        <input type="range" min="0" max={100-unknown} value={known} onChange={e=>setKnown(+e.target.value)} className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-green-500"/>
+      </div>
+      <div className="mb-3">
+        <div className="flex justify-between text-sm mb-1"><span>{lang==='zh'?'不確定性':'Uncertainties'}</span><span className="font-bold text-amber-600">{unknown}%</span></div>
+        <input type="range" min="0" max={100-known} value={unknown} onChange={e=>setUnknown(+e.target.value)} className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-amber-500"/>
+      </div>
+      <div className="h-8 rounded-full overflow-hidden flex mt-4">
+        <div style={{width:`${known}%`}} className="bg-green-500 transition-all"/>
+        <div style={{width:`${unknown}%`}} className="bg-amber-500 transition-all"/>
+        <div style={{width:`${Math.max(0,risk)}%`}} className="bg-red-500 transition-all"/>
+      </div>
+      <div className="flex justify-between text-xs mt-2">
+        <span className="text-green-600">{lang==='zh'?'已知':'Known'} {known}%</span>
+        <span className="text-amber-600">{lang==='zh'?'不確定':'Uncertain'} {unknown}%</span>
+        <span className="text-red-600">{lang==='zh'?'未知風險':'Unknown Risk'} {Math.max(0,risk)}%</span>
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   MAIN APP
+   ═══════════════════════════════════════════════════════════════ */
+function App() {
+  const [lang, setLang] = useState('zh');
+  const [isDark, setIsDark] = useState(false);
+  const [module, setModule] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
+  const [ttsState, setTtsState] = useState('idle');
+  const [studentInfo, setStudentInfo] = useState({ group:'', dept:'', id:'', name:'' });
+  const [analytics, setAnalytics] = useState({
+    time: Array(N).fill(0), clicks: Array(N).fill(0),
+    quizCorrect: Array(N).fill(0), quizTotal: Array(N).fill(0)
+  });
+  const contentRef = useRef(null);
+  const timerRef = useRef(null);
+  const t = dict[lang];
+
+  useEffect(() => {
+    if (isDark) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  }, [isDark]);
+
+  useEffect(() => {
+    window.speechSynthesis && window.speechSynthesis.cancel();
+    setTtsState('idle');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    if (timerRef.current) clearInterval(timerRef.current);
+    const modIdx = module - 1;
+    if (modIdx >= 0 && modIdx < N) {
+      timerRef.current = setInterval(() => {
+        setAnalytics(a => { const t2 = [...a.time]; t2[modIdx]++; return {...a, time: t2}; });
+      }, 1000);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [module]);
+
+  const handleClick = () => {
+    const modIdx = module - 1;
+    if (modIdx >= 0 && modIdx < N) setAnalytics(a => { const c = [...a.clicks]; c[modIdx]++; return {...a, clicks: c}; });
+  };
+
+  const handleQuizSubmit = (modId, correct, total) => {
+    const modIdx = modId - 1;
+    if (modIdx >= 0 && modIdx < N) setAnalytics(a => {
+      const qc = [...a.quizCorrect]; const qt = [...a.quizTotal];
+      qc[modIdx] = correct; qt[modIdx] = total;
+      return {...a, quizCorrect: qc, quizTotal: qt};
+    });
+  };
+
+  const handleTTS = (action) => {
+    if (!('speechSynthesis' in window)) return;
+    if (action === 'stop') { window.speechSynthesis.cancel(); setTtsState('idle'); return; }
+    if (action === 'pause') { window.speechSynthesis.pause(); setTtsState('paused'); return; }
+    if (action === 'play') {
+      if (ttsState === 'paused') { window.speechSynthesis.resume(); setTtsState('playing'); return; }
+      window.speechSynthesis.cancel();
+      const sep = lang === 'zh' ? '。 ' : '. ';
+      let texts = [];
+      if (module === 0) {
+        texts = [t.m0_title, t.m0_intro, t.m0_why, t.m0_why_desc].filter(Boolean);
+      } else if (module >= 1 && module <= N) {
+        const mk = `m${module}`;
+        texts = [
+          t[`${mk}_title`], t[`${mk}_p1`], t[`${mk}_p2`], t[`${mk}_p3`],
+          ...(t[`${mk}_cards`] || []).map(c => `${c.title}. ${c.desc}`),
+          ...(t[`${mk}_case`] ? [`${t[`${mk}_case`].title}. ${t[`${mk}_case`].desc}`] : []),
+          ...(t[`${mk}_terms`] || []).flatMap(term => [term.front, term.back])
+        ].filter(Boolean);
+      } else if (module === N+1) texts = [t.m7_title, t.m7_desc].filter(Boolean);
+      else if (module === N+2) texts = [t.mlab_title, t.mlab_desc].filter(Boolean);
+      else texts = [t.analytics_title, t.analytics_desc].filter(Boolean);
+      const text = texts.join(sep);
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.95;
+      const voices = window.speechSynthesis.getVoices();
+      if (lang === 'zh') {
+        const v = voices.find(v=>v.lang==='zh-TW'&&v.name.includes('Yating')) || voices.find(v=>v.lang==='zh-TW') || voices.find(v=>v.lang.startsWith('zh'));
+        if (v) utterance.voice = v; utterance.lang = 'zh-TW';
+      } else {
+        const v = voices.find(v=>v.lang==='en-GB'&&v.name.includes('Daniel')) || voices.find(v=>v.lang==='en-GB') || voices.find(v=>v.lang.startsWith('en'));
+        if (v) utterance.voice = v; utterance.lang = 'en-GB';
+      }
+      utterance.onend = () => setTtsState('idle');
+      utterance.onerror = () => setTtsState('idle');
+      window.speechSynthesis.speak(utterance);
+      setTtsState('playing');
+    }
+  };
+
+  const handleExportCSV = () => {
+    const BOM = '\uFEFF';
+    const mNavKeys = Array.from({length:N},(_,i)=>`m${i+1}_nav`);
+    const rows = [
+      [t.analytics_group, t.analytics_dept, t.analytics_id, t.analytics_name],
+      [studentInfo.group, studentInfo.dept, studentInfo.id, studentInfo.name], [],
+      [t.analytics_module, t.analytics_time, t.analytics_clicks, t.analytics_acc, t.analytics_correct_ans_total],
+      ...Array.from({length: N}, (_,i) => {
+        const acc = analytics.quizTotal[i] > 0 ? Math.round(analytics.quizCorrect[i]/analytics.quizTotal[i]*100)+'%' : t.analytics_no_data;
+        const ans = analytics.quizTotal[i] > 0 ? `${analytics.quizCorrect[i]}/${analytics.quizTotal[i]}/${8}` : t.analytics_no_data;
+        return [t[mNavKeys[i]], analytics.time[i]+t.analytics_sec, analytics.clicks[i]+t.analytics_times, acc, ans];
+      })
+    ];
+    const csv = BOM + rows.map(r => r.join(',')).join('\n');
+    const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = 'learning_analytics.csv'; a.click();
+  };
+
+  const icons = [<IconBookOpen size={16}/>,<IconAlertTriangle size={16}/>,<IconZap size={16}/>,<IconUsers size={16}/>,<IconLayers size={16}/>,<IconTarget size={16}/>,<IconFlag size={16}/>,<IconGlobe size={16}/>,<IconZapLab size={16}/>,<IconBarChart2 size={16}/>];
+  const modulesList = [
+    { id:0, icon: icons[0], title: t.m0_nav },
+    ...Array.from({length:N},(_,i)=>({ id:i+1, icon: icons[i+1], title: t[`m${i+1}_nav`] })),
+    { id:N+1, icon: <IconGlobe size={16}/>, title: t.m7_nav },
+    { id:N+2, icon: <IconZapLab size={16}/>, title: t.mlab_nav },
+    { id:N+3, icon: <IconBarChart2 size={16}/>, title: t.analytics_title }
+  ];
+
+  const H2 = ({children}) => <h2 className="text-3xl md:text-4xl font-serif font-black text-[#004030] dark:text-[#D8C3A5] border-b-2 border-[#D8C3A5] pb-4">{children}</h2>;
+
+  const renderNavBottom = () => (
+    <div className="mt-12 flex justify-between items-center pt-8 border-t border-slate-300 dark:border-slate-700">
+      <button onClick={() => setModule(Math.max(0, module-1))} disabled={module===0}
+        className="px-6 py-3 font-serif font-bold text-slate-500 hover:text-[#004030] dark:hover:text-[#D8C3A5] disabled:opacity-0 transition-colors flex items-center uppercase text-sm tracking-wider">
+        ← {t.nav_prev}
+      </button>
+      <button onClick={() => setModule(Math.min(TOTAL-1, module+1))} disabled={module===TOTAL-1}
+        className="px-8 py-3 bg-[#004030] dark:bg-[#D8C3A5] text-white dark:text-[#004030] font-serif font-bold hover:bg-[#002b20] disabled:opacity-0 transition-colors flex items-center uppercase text-sm tracking-wider shadow-md">
+        {t.nav_next} <IconArrowRight size={16} className="ml-2"/>
+      </button>
+    </div>
+  );
+
+  const renderLearningModule = (idx) => {
+    const mk = `m${idx}`;
+    const base = "space-y-6 text-base leading-relaxed text-slate-700 dark:text-slate-300 animate-fade-in";
+    return (
+      <div className={base}>
+        <H2>{t[`${mk}_title`]}</H2>
+        <p>{t[`${mk}_p1`]}</p>
+        <p className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg italic font-serif text-slate-600 dark:text-slate-300">{t[`${mk}_p2`]}</p>
+        <p>{t[`${mk}_p3`]}</p>
+        <div className={`grid gap-4 ${(t[`${mk}_cards`]||[]).length > 3 ? 'md:grid-cols-2 lg:grid-cols-3' : (t[`${mk}_cards`]||[]).length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+          {(t[`${mk}_cards`]||[]).map((c,i) => (
+            <div key={i} className="bg-white dark:bg-slate-800 p-5 rounded-xl border-l-4 border-[#004030] shadow-sm hover:shadow-md transition-shadow">
+              <h3 className="text-base font-bold font-serif text-[#004030] dark:text-[#D8C3A5] mb-2">{c.title}</h3>
+              <p className="text-sm leading-relaxed">{c.desc}</p>
+            </div>
+          ))}
+        </div>
+        {t[`${mk}_case`] && (
+          <div className="bg-[#004030] text-[#D8C3A5] p-5 rounded-xl shadow-md">
+            <div className="flex items-start">
+              <IconAlertTriangle className="mr-3 shrink-0 mt-1" size={22}/>
+              <div>
+                <h4 className="font-bold font-serif text-base mb-2">{t[`${mk}_case`].title}</h4>
+                <p className="text-sm opacity-90 leading-relaxed">{t[`${mk}_case`].desc}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="mt-8">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">{t.key_terms}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {(t[`${mk}_terms`]||[]).map((term,i) => <FlipCard key={i} front={term.front} back={term.back} t={t}/>)}
+          </div>
+        </div>
+        <ModuleQuiz questions={t[`${mk}_q`]} t={t} moduleId={idx} onQuizSubmit={handleQuizSubmit}/>
+        {renderNavBottom()}
+      </div>
+    );
+  };
+
+  const renderResources = () => {
+    const wharton = [
+      { label: lang==='zh'?'Wharton Online 創業課程':'Wharton Online Entrepreneurship', url: 'https://online.wharton.upenn.edu/entrepreneurship/', desc: lang==='zh'?'本系列課程的完整版本，含更多模組與作業。':'Full version of this course series with additional modules and assignments.' },
+      { label: lang==='zh'?'Kornish & Ulrich (2014) 原始論文':'Kornish & Ulrich (2014) Original Paper', url: 'https://journals.sagepub.com/doi/10.1509/jmr.12.0401', desc: lang==='zh'?'「原始構想在創新中的重要性」，VIDE 模型的學術基礎。':'\"The Importance of the Raw Idea in Innovation\" — the academic foundation of the VIDE model.' },
+      { label: lang==='zh'?'Innovation Tournaments（書籍）':'Innovation Tournaments (Book)', url: 'https://www.amazon.com/Innovation-Tournaments-Creating-Selecting-Exceptional/dp/1422152227', desc: lang==='zh'?'Terwiesch & Ulrich 著，錦標賽策略的完整論述。':'By Terwiesch & Ulrich — the complete treatment of the tournament approach.' }
+    ];
+    const cases = [
+      { label: lang==='zh'?'Segway 失敗分析（INSEAD 藍海）':'Segway Failure Analysis (INSEAD Blue Ocean)', url: 'https://www.blueoceanstrategy.com/blog/segway-case-study-avoiding-fate-of-segway-electric-scooter/', desc: lang==='zh'?'從價值創新角度分析 Segway 為何失敗以及電動滑板車如何成功。':'Value innovation analysis of why Segway failed and how e-scooters succeeded.' },
+      { label: lang==='zh'?'LEGO Ideas 群眾外包（MIT Sloan）':'LEGO Ideas Crowdsourcing (MIT Sloan)', url: 'https://sloanreview.mit.edu/article/lego-takes-customers-innovations-further/', desc: lang==='zh'?'四年深度研究 LEGO 如何透過顧客共創推動開放式創新。':'Four-year study of how LEGO drives open innovation through customer co-creation.' },
+      { label: lang==='zh'?'精實創業方法論（官方網站）':'Lean Startup Methodology (Official)', url: 'https://theleanstartup.com/', desc: lang==='zh'?'Eric Ries 精實創業的官方資源、案例與社群。':'Official resources, case studies, and community from Eric Ries.' },
+      { label: lang==='zh'?'Threadless 商業模式分析':'Threadless Business Model Analysis', url: 'https://crowdsourcingweek.com/blog/lego-success-through-crowdsourcing/', desc: lang==='zh'?'群眾外包在產品創新中的最佳實踐案例。':'Best practices of crowdsourcing in product innovation.' }
+    ];
+    return (
+      <div className="space-y-10 animate-fade-in">
+        <H2>{t.m7_title}</H2>
+        <p className="text-slate-600 dark:text-slate-400">{t.m7_desc}</p>
+        <div>
+          <div className="flex items-center gap-4 mb-5">
+            <a href="https://online.wharton.upenn.edu/" target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-3 bg-[#004030] hover:bg-[#002b20] text-white px-5 py-2.5 rounded-xl shadow-md transition-colors">
+              <span className="text-[#D8C3A5] text-xl font-black font-serif">W</span>
+              <span className="text-sm opacity-80">{lang==='zh'?'Wharton Online 官方網站':'Wharton Online Official'}</span>
+            </a>
+          </div>
+          <div className="grid md:grid-cols-2 gap-3">{wharton.map((l,i)=><LinkCard key={i} {...l}/>)}</div>
+        </div>
+        <div>
+          <h3 className="text-xl font-bold font-serif text-[#004030] dark:text-[#D8C3A5] mb-5">
+            {lang==='zh'?'微個案與延伸閱讀':'Mini-Cases & Further Reading'}
+          </h3>
+          <div className="grid md:grid-cols-2 gap-3">{cases.map((l,i)=><LinkCard key={i} {...l}/>)}</div>
+        </div>
+        <div className="bg-[#004030]/5 dark:bg-[#D8C3A5]/5 rounded-xl p-5 border border-[#004030]/20 dark:border-[#D8C3A5]/20">
+          <p className="text-sm text-slate-600 dark:text-slate-400">⚠️ {lang==='zh'?'以上外部連結僅供學術研究與教學使用，內容版權歸原作者所有。連結有效性可能隨時間變化。':'External links are provided for academic research and educational use only. Copyright belongs to original authors. Link availability may change over time.'}</p>
+        </div>
+        {renderNavBottom()}
+      </div>
+    );
+  };
+
+  const renderLab = () => (
+    <div className="space-y-8 animate-fade-in">
+      <H2>{t.mlab_title}</H2>
+      <p className="text-slate-600 dark:text-slate-400">{t.mlab_desc}</p>
+      <VIDELab lang={lang}/>
+      <div className="grid md:grid-cols-2 gap-6">
+        <TournamentLab lang={lang}/>
+        <OpportunityScorer lang={lang}/>
+      </div>
+      <UncertaintyLab lang={lang}/>
+      {renderNavBottom()}
+    </div>
+  );
+
+  const renderContent = () => {
+    const base = "space-y-6 text-base leading-relaxed text-slate-700 dark:text-slate-300 animate-fade-in";
+    // M0 Overview
+    if (module === 0) return (
+      <div className={base}>
+        <div className="bg-gradient-to-br from-[#004030] to-[#002b20] rounded-2xl p-6 md:p-10 text-white shadow-lg">
+          <p className="text-[#D8C3A5] text-sm font-bold uppercase tracking-widest mb-2">{t.subtitle}</p>
+          <h1 className="text-3xl md:text-5xl font-serif font-black leading-tight mb-4">{t.m0_title}</h1>
+          <p className="text-[#D8C3A5]/90 leading-relaxed max-w-2xl">{t.m0_intro}</p>
+          <button onClick={() => setModule(1)} className="mt-6 px-8 py-3 bg-[#D8C3A5] text-[#004030] font-serif font-bold rounded-xl hover:bg-white transition-colors shadow-md">
+            {t.m0_start}
+          </button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {t.m0_stats.map((s,i) => (
+            <div key={i} className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 text-center shadow-sm">
+              <p className="text-2xl font-black font-serif text-[#004030] dark:text-[#D8C3A5]">{s.val}</p>
+              <p className="text-xs text-slate-500 mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+        <div>
+          <h3 className="font-serif font-bold text-xl text-[#004030] dark:text-[#D8C3A5] mb-2">{t.m0_why}</h3>
+          <p>{t.m0_why_desc}</p>
+        </div>
+        <div className="space-y-3">
+          {t.m0_modules.map((m,i) => (
+            <button key={i} onClick={() => setModule(i+1)} className="w-full flex items-center bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-[#004030] dark:hover:border-[#D8C3A5] hover:shadow-md transition-all group text-left">
+              <div className="w-10 h-10 rounded-full bg-[#004030] dark:bg-[#D8C3A5]/20 flex items-center justify-center text-[#D8C3A5] dark:text-[#D8C3A5] font-bold font-serif mr-4 shrink-0">{m.num}</div>
+              <div><h4 className="font-bold font-serif text-[#004030] dark:text-[#D8C3A5] text-sm group-hover:underline">{m.title}</h4><p className="text-xs text-slate-500 mt-0.5">{m.desc}</p></div>
+              <IconChevronRight size={16} className="ml-auto opacity-30 group-hover:opacity-100 shrink-0"/>
+            </button>
+          ))}
+        </div>
+        {renderNavBottom()}
+      </div>
+    );
+    // Learning modules M1-M6
+    if (module >= 1 && module <= N) return renderLearningModule(module);
+    // Resources
+    if (module === N+1) return renderResources();
+    // Lab
+    if (module === N+2) return renderLab();
+    // Analytics
+    if (module === N+3) {
+      const totalTime = analytics.time.reduce((a,b)=>a+b,0);
+      const totalClicks = analytics.clicks.reduce((a,b)=>a+b,0);
+      const totalCorrect = analytics.quizCorrect.reduce((a,b)=>a+b,0);
+      const totalAnswered = analytics.quizTotal.reduce((a,b)=>a+b,0);
+      const overallAcc = totalAnswered > 0 ? Math.round(totalCorrect/totalAnswered*100)+'%' : t.analytics_no_data;
+      const canExport = studentInfo.group && studentInfo.dept && studentInfo.id && studentInfo.name;
+      const mNavKeys = Array.from({length:N},(_,i)=>`m${i+1}_nav`);
+      return (
+        <div className={base}>
+          <H2>{t.analytics_title}</H2>
+          <p className="text-slate-500 dark:text-slate-400">{t.analytics_desc}</p>
+          <div className="grid grid-cols-3 gap-4">
+            {[{label:t.analytics_total_time,val:totalTime+t.analytics_sec},{label:t.analytics_total_clicks,val:totalClicks+t.analytics_times},{label:t.analytics_overall_acc,val:overallAcc}].map((s,i)=>(
+              <div key={i} className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 text-center shadow-sm">
+                <p className="text-2xl font-black font-serif text-[#004030] dark:text-[#D8C3A5]">{s.val}</p>
+                <p className="text-xs text-slate-500 mt-1">{s.label}</p>
+              </div>
+            ))}
+          </div>
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+            <table className="w-full text-sm">
+              <thead><tr className="bg-[#004030] text-[#D8C3A5]">
+                <th className="text-left p-3">{t.analytics_module}</th>
+                <th className="text-center p-3">{t.analytics_time}</th>
+                <th className="text-center p-3">{t.analytics_clicks}</th>
+                <th className="text-center p-3">{t.analytics_acc}</th>
+                <th className="text-center p-3 hidden md:table-cell">{t.analytics_correct_ans_total}</th>
+              </tr></thead>
+              <tbody>{Array.from({length:N},(_,i) => {
+                const acc = analytics.quizTotal[i]>0 ? Math.round(analytics.quizCorrect[i]/analytics.quizTotal[i]*100)+'%' : t.analytics_no_data;
+                const ans = analytics.quizTotal[i]>0 ? `${analytics.quizCorrect[i]}/${analytics.quizTotal[i]}/${8}` : t.analytics_no_data;
+                return <tr key={i} className="border-t border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                  <td className="p-3 font-medium text-[#004030] dark:text-[#D8C3A5]">{t[mNavKeys[i]]}</td>
+                  <td className="p-3 text-center">{analytics.time[i]}{t.analytics_sec}</td>
+                  <td className="p-3 text-center">{analytics.clicks[i]}{t.analytics_times}</td>
+                  <td className="p-3 text-center">{acc}</td>
+                  <td className="p-3 text-center hidden md:table-cell">{ans}</td>
+                </tr>;
+              })}</tbody>
+            </table>
+          </div>
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+            <h3 className="font-serif font-bold text-lg text-[#004030] dark:text-[#D8C3A5] mb-4">{t.analytics_form_title}</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{t.analytics_group}</label>
+                <select value={studentInfo.group} onChange={e=>setStudentInfo({...studentInfo,group:e.target.value})} className="w-full border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                  <option value="">--</option>{t.group_options.map(g=><option key={g} value={g}>{g}</option>)}
+                </select></div>
+              <div><label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{t.analytics_dept}</label>
+                <input value={studentInfo.dept} onChange={e=>setStudentInfo({...studentInfo,dept:e.target.value})} placeholder={t.analytics_dept_ph} className="w-full border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200"/></div>
+              <div><label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{t.analytics_id}</label>
+                <input value={studentInfo.id} onChange={e=>setStudentInfo({...studentInfo,id:e.target.value})} placeholder={t.analytics_id_ph} className="w-full border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200"/></div>
+              <div><label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{t.analytics_name}</label>
+                <input value={studentInfo.name} onChange={e=>setStudentInfo({...studentInfo,name:e.target.value})} placeholder={t.analytics_name_ph} className="w-full border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200"/></div>
+            </div>
+            <button onClick={handleExportCSV} disabled={!canExport} className="mt-4 px-6 py-2.5 bg-[#004030] dark:bg-[#D8C3A5] text-white dark:text-[#004030] font-bold rounded-lg disabled:opacity-40 hover:bg-[#002b20] transition-colors text-sm">
+              {canExport ? t.analytics_export_csv : t.analytics_fill_required}
+            </button>
+          </div>
+          {renderNavBottom()}
+        </div>
+      );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f4f4f4] dark:bg-[#121212] font-sans selection:bg-[#004030] selection:text-white dark:selection:bg-[#D8C3A5] dark:selection:text-[#004030] flex flex-col overflow-x-hidden pt-16">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-[#004030] dark:bg-slate-900 text-white z-50 shadow-lg border-b border-[#D8C3A5]/30">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="relative" ref={menuRef}>
+              <button className="p-2 hover:bg-white/10 rounded-lg" onClick={() => setMenuOpen(!menuOpen)}>
+                {menuOpen ? <IconX size={20}/> : <IconMenu size={20}/>}
+              </button>
+              {menuOpen && (
+                <div className="absolute top-full left-0 mt-1 w-64 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 z-[100] overflow-x-hidden">
+                  <div className="bg-[#004030]/5 dark:bg-[#D8C3A5]/5 px-4 py-2 border-b border-slate-200 dark:border-slate-700">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t.nav_modules}</p>
+                  </div>
+                  {modulesList.map(m => (
+                    <button key={m.id} onClick={() => { setModule(m.id); setMenuOpen(false); }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors text-left
+                        ${module === m.id ? 'bg-[#004030] text-white dark:bg-[#D8C3A5]/20 dark:text-[#D8C3A5] font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
+                      <span className={module === m.id ? 'text-[#D8C3A5]' : 'opacity-50'}>{m.icon}</span>
+                      <span className="truncate">{m.title}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button onClick={() => window.scrollTo({top:0,behavior:'smooth'})} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <div className="font-serif font-black text-lg tracking-widest text-[#D8C3A5]">ENT</div>
+              <div className="hidden sm:block text-left">
+                <h1 className="font-serif font-bold text-sm md:text-base leading-tight">{t.title}</h1>
+                <p className="text-[10px] text-[#D8C3A5]/70">{t.subtitle}</p>
+              </div>
+            </button>
+          </div>
+          <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-1 mr-2">
+              {ttsState !== 'playing' ? (
+                <button onClick={() => handleTTS('play')} title={t.audio_read} className="p-2 rounded-full hover:bg-white/10 transition-colors flex items-center space-x-1 text-xs">
+                  <IconPlay size={14}/><span className="hidden md:inline">{t.audio_read}</span>
+                </button>
+              ) : (
+                <button onClick={() => handleTTS('pause')} className="p-2 rounded-full hover:bg-white/10 transition-colors"><IconPause size={14}/></button>
+              )}
+              {ttsState !== 'idle' && <button onClick={() => handleTTS('stop')} className="p-2 rounded-full hover:bg-white/10 transition-colors"><IconSquare size={14}/></button>}
+            </div>
+            <button onClick={() => setLang(lang==='zh'?'en':'zh')} className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-sm font-bold transition-colors">{lang === 'zh' ? 'EN' : '中文'}</button>
+            <button onClick={() => setIsDark(!isDark)} className="p-2 rounded-full hover:bg-white/10 transition-colors">{isDark ? <IconSun size={18}/> : <IconMoon size={18}/>}</button>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto w-full px-3 sm:px-4 lg:px-6 flex-1 flex flex-col md:flex-row gap-0 py-6">
+        <aside className="hidden md:block w-64 shrink-0 mr-6">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden sticky top-24">
+            <div className="bg-[#004030]/5 dark:bg-[#D8C3A5]/5 px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{t.nav_modules}</p>
+            </div>
+            <nav className="space-y-0.5 p-2">
+              {modulesList.map(m => (
+                <button key={m.id} onClick={() => setModule(m.id)}
+                  className={`w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left
+                    ${module === m.id ? 'bg-[#004030] dark:bg-[#D8C3A5]/20 text-white dark:text-[#D8C3A5] border border-[#D8C3A5]/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
+                  <span className={`mr-2.5 ${module===m.id ? 'text-[#D8C3A5]' : 'opacity-50'}`}>{m.icon}</span>
+                  <span className="truncate">{m.title}</span>
+                  {module === m.id && <IconChevronRight size={14} className="ml-auto opacity-50 shrink-0"/>}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </aside>
+        <main ref={contentRef} className="flex-1 min-w-0" onClick={handleClick}>
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 sm:p-6 md:p-8">
+            {renderContent()}
+          </div>
+        </main>
+      </div>
+
+      <footer className="bg-[#004030] dark:bg-slate-950 text-slate-300 dark:text-slate-400 border-t border-[#D8C3A5]">
+        <div className="max-w-7xl mx-auto px-4 h-8 flex justify-between items-center text-[10px] sm:text-xs">
+          <div className="flex items-center space-x-2 md:space-x-4">
+            <div className="font-serif font-black text-[#D8C3A5] hidden sm:block tracking-widest text-sm">ENT</div>
+            <span className="truncate">{t.copyright} · {t.date}</span>
+          </div>
+          <div className="flex items-center space-x-3 md:space-x-4">
+            <span className="text-[#D8C3A5]/70 font-serif hidden sm:inline">
+              Architect:&nbsp;
+              <a href={t.architect_url} target="_blank" rel="noopener noreferrer" className="text-[#D8C3A5] hover:text-white underline underline-offset-2 transition-colors">
+                {t.architect_name}
+              </a>
+            </span>
+            <button onClick={() => window.scrollTo({top:0,behavior:'smooth'})} className="flex items-center uppercase tracking-widest hover:text-white transition-colors border-l border-slate-600 pl-3">
+              <IconChevronUp size={12} className="md:mr-1"/> <span className="hidden sm:inline">TOP</span>
+            </button>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
